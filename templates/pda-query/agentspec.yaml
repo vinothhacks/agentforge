@@ -1,0 +1,36 @@
+id: pda-query
+template: pda-query
+model_pin:
+  provider: openrouter
+  name: openai/gpt-4o-mini
+  digest: openrouter:openai/gpt-4o-mini
+  num_ctx: 8192
+card_ref: null
+persona:
+  name: PDA desk
+  language: en
+memory:
+  short_term: true
+  long_term: false
+workspace_root: .
+rag:
+  enabled: true
+  sources:
+    - "."
+  retrieval: hybrid
+tools:
+  - rag_search
+  - fs_list
+  - fs_read
+permissions:
+  fs_write: deny
+  shell: deny
+  send_email: deny
+budgets:
+  max_steps: 3
+  max_tools: 3
+  max_tokens: 32000
+  max_wall_s: 90
+  max_usd: 0.50
+planner:
+  enabled: false

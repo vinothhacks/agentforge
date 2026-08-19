@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgentForge — PDA query</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a222c;
+      --ink: #e8eef4;
+      --muted: #8b9aab;
+      --accent: #3d9cf0;
+      --warn: #e0a14a;
+      --bad: #e05a5a;
+      --ok: #5ec98a;
+      --line: #2a3542;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 15px/1.45 "Segoe UI", system-ui, sans-serif;
+    }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel);
+    }
+    header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+    header .sub { color: var(--muted); font-size: 12px; }
+    .meter { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+    main { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 54px); }
+    aside { border-right: 1px solid var(--line); padding: 16px; background: #12181f; }
+    aside label { display: block; font-size: 11px; color: var(--muted); margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
+    input, textarea, button {
+      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+      background: var(--bg); color: var(--ink); font: inherit;
+    }
+    button { cursor: pointer; background: var(--accent); border: 0; color: #062033; font-weight: 600; margin-top: 8px; }
+    button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    .note { font-size: 12px; color: var(--warn); margin-top: 10px; }
+    .ok { color: var(--ok); }
+    .bad { color: var(--bad); }
+    .chat { display: flex; flex-direction: column; height: calc(100vh - 54px); }
+    .log { flex: 1; overflow: auto; padding: 20px; }
+    .bubble { max-width: 720px; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; }
+    .user { background: #243044; margin-left: auto; }
+    .bot { background: var(--panel); border: 1px solid var(--line); }
+    .trace { font-size: 12px; color: var(--muted); margin: -8px 0 12px; }
+    form.composer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+    form.composer textarea { flex: 1; min-height: 44px; resize: vertical; }
+    form.composer button { width: auto; margin: 0; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>AgentForge · PDA query</h1>
+      <div class="sub" id="ws"></div>
+    </div>
+    <div class="meter" id="meter">tokens 0 / 32000 · $0.00 / $0.50</div>
+  </header>
+  <main>
+    <aside>
+      <label>OpenRouter key</label>
+      <input id="key" type="password" placeholder="sk-or-…" />
+      <button id="saveKey">Save key</button>
+      <label>Fast probe (2-min path)</label>
+      <button class="ghost" id="probe">Run fast probe</button>
+      <div id="probeOut" class="sub"></div>
+      <label>Local (optional)</label>
+      <button class="ghost" id="scan">Want this free on your machine?</button>
+      <div id="scanOut" class="sub"></div>
+      <p class="note">Export to Excel comes next. v1 only queries this folder.</p>
+      <div id="ingestWarn" class="note"></div>
+    </aside>
+    <section class="chat">
+      <div class="log" id="log"></div>
+      <form class="composer" id="form">
+        <textarea id="msg" placeholder="Which PDAs mention demurrage?"></textarea>
+        <button type="submit">Ask</button>
+      </form>
+    </section>
+  </main>
+  <script>
+    const log = document.getElementById("log");
+    const meter = document.getElementById("meter");
+    let session = "default";
+
+    function add(role, text, extra) {
+      const d = document.createElement("div");
+      d.className = "bubble " + (role === "user" ? "user" : "bot");
+      d.textContent = text;
+      log.appendChild(d);
+      if (extra) {
+        const t = document.createElement("div");
+        t.className = "trace";
+        t.textContent = extra;
+        log.appendChild(t);
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function j(url, opts) {
+      const r = await fetch(url, opts);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.detail || JSON.stringify(data));
+      return data;
+    }
+
+    async function boot() {
+      const h = await j("/api/health");
+      document.getElementById("ws").textContent = h.workspace + (h.ingested ? " · indexed" : " · not ingested");
+      const w = await j("/api/ingest/warnings");
+      if (w.no_text_layer_count) {
+        document.getElementById("ingestWarn").textContent =
+          w.no_text_layer_count + " files have no text layer and will miss lexical search.";
+      }
+    }
+
+    document.getElementById("saveKey").onclick = async () => {
+      await j("/api/key", { method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ key: document.getElementById("key").value }) });
+      add("bot", "Key saved. Ask a question — or run the fast probe first.");
+    };
+
+    document.getElementById("probe").onclick = async () => {
+      document.getElementById("probeOut").textContent = "probing…";
+      try {
+        const c = await j("/api/probe", { method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ provider: "openrouter", name: "openai/gpt-4o-mini", mode: "fast" }) });
+        document.getElementById("probeOut").textContent =
+          c.verdict + " · lo95=" + (c.measured && c.measured.per_step_success_lo95) + " · steps=" + (c.measured && c.measured.max_steps);
+      } catch (e) {
+        document.getElementById("probeOut").textContent = String(e);
+      }
+    };
+
+    document.getElementById("scan").onclick = async () => {
+      document.getElementById("scanOut").textContent = "scanning…";
+      try {
+        const s = await j("/api/scan");
+        let msg = (s.ollama ? "Ollama ok. " : "Install Ollama: " + (s.ollama_install || "") + " ")
+          + (s.llmfit ? "llmfit ok." : "Run: uvx llmfit");
+        document.getElementById("scanOut").textContent = msg;
+        const r = await j("/api/scan/run", { method: "POST" });
+        document.getElementById("scanOut").textContent += " → " + (r.english || r.reason || (r.ok ? "local pin ok" : "staying on cloud"));
+      } catch (e) {
+        document.getElementById("scanOut").textContent = String(e);
+      }
+    };
+
+    document.getElementById("form").onsubmit = async (ev) => {
+      ev.preventDefault();
+      const text = document.getElementById("msg").value.trim();
+      if (!text) return;
+      document.getElementById("msg").value = "";
+      add("user", text);
+      try {
+        const r = await j("/api/chat", { method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ message: text, session_id: session }) });
+        session = r.session_id;
+        const tools = (r.traces || []).filter(t => t.kind === "tool").map(t => t.tool).join(", ");
+        add("bot", r.text || "(no text)", (tools ? "tools: " + tools + " · " : "") + (r.excel_note || ""));
+        if (r.eval && r.eval.enumeration) {
+          add("bot", "enumeration recall " + r.eval.enumeration.recall +
+            (r.eval.enumeration.cause ? " · FAIL " + r.eval.enumeration.cause : " · pass"));
+        }
+        const u = r.usage || {};
+        meter.textContent = `tokens ${u.prompt_tokens || 0} / ${u.max_tokens || 32000} · $${(u.usd || 0).toFixed(4)} / $${u.max_usd || 0.5}`;
+      } catch (e) {
+        add("bot", String(e));
+      }
+    };
+
+    boot().catch((e) => add("bot", String(e)));
+  </script>
+</body>
+</html>

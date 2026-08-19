@@ -1,0 +1,51 @@
+{
+  "suite": "pdf_extract_only",
+  "n_pdfs": 4,
+  "text_layer_ok": 3,
+  "text_layer_fail": 1,
+  "text_layer_rate": 0.75,
+  "total_pages": 40,
+  "total_chars": 113239,
+  "rows": [
+    {
+      "file": "esteve-paldiski-brochure.pdf",
+      "bytes": 2562270,
+      "pages": 7,
+      "has_text_layer": true,
+      "chars": 4990,
+      "chars_per_page": 712.9,
+      "extract_s": 0.391,
+      "preview": "Paldiski South Harbour"
+    },
+    {
+      "file": "fonasba-standard-liner-agency-agreement-1993.pdf",
+      "bytes": 338523,
+      "pages": 5,
+      "has_text_layer": false,
+      "chars": 0,
+      "chars_per_page": 0.0,
+      "extract_s": 0.005,
+      "preview": ""
+    },
+    {
+      "file": "itic-intermediary-2006-proforma-da.pdf",
+      "bytes": 1944182,
+      "pages": 12,
+      "has_text_layer": true,
+      "chars": 70995,
+      "chars_per_page": 5916.2,
+      "extract_s": 0.288,
+      "preview": "| ITIC  | ITIC   | THE PROFESSIONAL INSURER   | THE PROFESSIONAL INSURER   | visit ITIC's new website and  | sign up for the new ITIC  | news ser vice   | Sur veyors signing  | Indemnities   | In this edition:  | itic-in"
+    },
+    {
+      "file": "uscourts-pda-da-desk-opinion.pdf",
+      "bytes": 692028,
+      "pages": 16,
+      "has_text_layer": true,
+      "chars": 37254,
+      "chars_per_page": 2328.4,
+      "extract_s": 0.2,
+      "preview": "| Case 4:11-cv-00938 | Document 79 | Filed in TXSD on 01/08/13 | Page 1 of 16   | IN | THE UNITED | STATES DISTRICT COURT  | SOUTHERN DISTRICT OF TEXAS  | HOUSTON | DIVISION  JO TANKERS, | A.S. | and SO TANKERS B.V., | 6"
+    }
+  ]
+}

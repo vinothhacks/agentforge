@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proforma Disbursement Account (PDA) Template — MetaCAD</title>
+<style>
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 900px; margin: 1.5rem auto; padding: 1rem; color: #1a1a1a; line-height: 1.45; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  h1 small { font-weight: 400; color: #666; font-size: 0.8em; }
+  h2 { font-size: 1.05rem; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 2px solid #1a1a1a; text-transform: uppercase; letter-spacing: 0.04em; }
+  .banner { background: #fff8e1; border-left: 4px solid #f4a300; padding: 0.5rem 0.75rem; font-size: 0.85rem; margin: 0.5rem 0 1rem 0; }
+  .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem 1rem; font-size: 0.9rem; margin-bottom: 1rem; }
+  .meta div { border-bottom: 1px dotted #aaa; padding: 0.15rem 0; }
+  .meta .label { color: #666; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 0.5rem; }
+  th, td { border: 1px solid #ccc; padding: 0.3rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: #f3f3f3; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .amount { text-align: right; font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace; }
+  .sub { background: #f9f9f9; font-weight: 500; }
+  .total { background: #1a1a1a; color: #fff; font-weight: 600; }
+  .muted { color: #666; font-size: 0.8em; font-style: italic; }
+  .footer { margin-top: 2rem; font-size: 0.75rem; color: #666; border-top: 1px solid #ccc; padding-top: 0.5rem; }
+  .footer a { color: #0a4d8a; }
+  @media print { body { margin: 0.5in; max-width: none; } .no-print { display: none; } }
+</style>
+</head>
+<body>
+
+<h1>Proforma Disbursement Account (PDA) <small>— Template</small></h1>
+<div class="banner">
+  <strong>Indicative / template only.</strong> Fill in actuals from the local agent's quote and current port-tariff publications. The PDA is a pre-arrival cost estimate; reconcile against the Final Disbursement Account (FDA) after departure. See <a href="https://metacad.io/en/commercial/port-disbursement/guides/pda-vs-fda-explained/">PDA vs FDA explained</a> and the <a href="https://metacad.io/en/commercial/port-disbursement/guides/how-to-audit-da/">DA audit checklist</a>.
+</div>
+
+<h2>Vessel Particulars</h2>
+<div class="meta">
+  <div><span class="label">Vessel name</span><br>______________________________</div>
+  <div><span class="label">IMO number</span><br>______________________________</div>
+  <div><span class="label">Flag</span><br>______________________________</div>
+  <div><span class="label">Vessel class / type</span><br>______________________________</div>
+  <div><span class="label">GT / NT / DWT</span><br>______________________________</div>
+  <div><span class="label">LOA / Beam / Draft (m)</span><br>______________________________</div>
+  <div><span class="label">TEU / PAX (if applicable)</span><br>______________________________</div>
+  <div><span class="label">ESI score (Environmental Ship Index)</span><br>______________________________</div>
+</div>
+
+<h2>Voyage / Call</h2>
+<div class="meta">
+  <div><span class="label">Port of call (UN/LOCODE)</span><br>______________________________</div>
+  <div><span class="label">Port authority</span><br>______________________________</div>
+  <div><span class="label">Berth / terminal</span><br>______________________________</div>
+  <div><span class="label">ETA / ETD (local)</span><br>______________________________</div>
+  <div><span class="label">Days alongside</span><br>______________________________</div>
+  <div><span class="label">Call purpose</span><br>Load / Discharge / Bunkering / Crew change / OPL</div>
+  <div><span class="label">Cargo type + quantity</span><br>______________________________</div>
+  <div><span class="label">Charter party form</span><br>______________________________</div>
+  <div><span class="label">Owner / Charterer</span><br>______________________________</div>
+  <div><span class="label">Agent (FONASBA member?)</span><br>______________________________</div>
+</div>
+
+<h2>Charges</h2>
+<table>
+<thead>
+  <tr><th style="width: 28%;">Category</th><th style="width: 36%;">Line item</th><th style="width: 18%;">Formula / basis</th><th class="amount" style="width: 18%;">USD</th></tr>
+</thead>
+<tbody>
+  <tr><td rowspan="2">Tonnage / port dues</td><td>Tonnage dues</td><td>GT × rate per published tariff</td><td class="amount"></td></tr>
+  <tr><td>Light & navigation dues (if separate)</td><td>NT × federal rate</td><td class="amount"></td></tr>
+
+  <tr><td rowspan="3">Pilotage</td><td>Pilotage inbound</td><td>GT-banded scale</td><td class="amount"></td></tr>
+  <tr><td>Pilotage outbound</td><td>GT-banded scale</td><td class="amount"></td></tr>
+  <tr><td>Night / weekend surcharge</td><td>+10–30% if applicable</td><td class="amount"></td></tr>
+
+  <tr><td rowspan="2">Towage</td><td>Tug 1 × 2 ops</td><td>Per-tug-per-op × ops</td><td class="amount"></td></tr>
+  <tr><td>Tugs 2-4 × 2 ops</td><td>If GT &gt; 30,000–150,000</td><td class="amount"></td></tr>
+
+  <tr><td>Mooring</td><td>Lines on / off (×2 ops)</td><td>Per-op rate × 2</td><td class="amount"></td></tr>
+
+  <tr><td>Agency fee</td><td>Per call (FONASBA scale)</td><td>GT-banded</td><td class="amount"></td></tr>
+
+  <tr><td rowspan="2">Cargo dues</td><td>Wharfage</td><td>Cargo qty × per-MT / per-TEU rate</td><td class="amount"></td></tr>
+  <tr><td>Stevedoring (if owner-allocated)</td><td>Per cargo-handling agreement</td><td class="amount"></td></tr>
+
+  <tr><td rowspan="6">Miscellaneous</td><td>Garbage / waste reception</td><td>Per call (EU 2019/883 indirect)</td><td class="amount"></td></tr>
+  <tr><td>ISPS / port security</td><td>Per call</td><td class="amount"></td></tr>
+  <tr><td>Immigration / port-health</td><td>Per call</td><td class="amount"></td></tr>
+  <tr><td>Freshwater supply</td><td>Per call (if requested)</td><td class="amount"></td></tr>
+  <tr><td>Slops / sludge disposal</td><td>Per call (if requested)</td><td class="amount"></td></tr>
+  <tr><td>Launch / boat services</td><td>Per movement</td><td class="amount"></td></tr>
+
+  <tr class="muted"><td rowspan="2">Discounts (if eligible)</td><td>ESI ≥ 31 (-10% on tonnage dues)</td><td>Tonnage × −0.10</td><td class="amount">−</td></tr>
+  <tr class="muted"><td>Green Ship Programme / Green Award</td><td>Per port programme</td><td class="amount">−</td></tr>
+
+  <tr class="muted"><td rowspan="2">Surcharges (US-China — currently OFF, reactivates 10 Nov 2026 unless extended)</td><td>USTR Section 301 (US-port)</td><td>NT × $/NT (build / ownership / operator triggers)</td><td class="amount"></td></tr>
+  <tr class="muted"><td>MOFCOM Special Port Fee (PRC-port)</td><td>Symmetric to USTR</td><td class="amount"></td></tr>
+
+  <tr class="sub"><td colspan="3">Subtotal in native currency</td><td class="amount"></td></tr>
+  <tr class="sub"><td colspan="3">FX rate (native → USD), as of YYYY-MM-DD</td><td class="amount"></td></tr>
+  <tr class="total"><td colspan="3">TOTAL (USD)</td><td class="amount"></td></tr>
+  <tr><td colspan="3">Cash advance requested (typically 80–100% of total)</td><td class="amount"></td></tr>
+</tbody>
+</table>
+
+<h2>Reconciliation (after departure — FDA vs PDA)</h2>
+<table>
+<thead>
+  <tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+  <tr><td>Date PDA issued</td><td></td></tr>
+  <tr><td>Date FDA issued (target: ≤ 60 days from departure)</td><td></td></tr>
+  <tr><td>Variance (FDA − PDA), USD</td><td></td></tr>
+  <tr><td>Variance %</td><td></td></tr>
+  <tr><td>Top-3 lines driving variance</td><td></td></tr>
+  <tr><td>Band classification (noise / query / structural / escalation)</td><td></td></tr>
+  <tr><td>Reservation of rights (yes/no)</td><td></td></tr>
+  <tr><td>Notes for next-call benchmark</td><td></td></tr>
+</tbody>
+</table>
+
+<h2>Agent</h2>
+<div class="meta">
+  <div><span class="label">Agent name</span><br>______________________________</div>
+  <div><span class="label">Address</span><br>______________________________</div>
+  <div><span class="label">Email</span><br>______________________________</div>
+  <div><span class="label">Phone</span><br>______________________________</div>
+  <div><span class="label">FONASBA member</span><br>Yes / No</div>
+  <div><span class="label">Bank details for advance</span><br>______________________________</div>
+</div>
+
+<div class="footer">
+  Generated from <a href="https://metacad.io/en/commercial/port-disbursement/pda-template/">MetaCAD PDA template</a>.
+  Cross-check totals with the open-math calculator at <a href="https://metacad.io/en/commercial/port-disbursement/">metacad.io/commercial/port-disbursement</a> —
+  every line item there carries its formula and a citation to the public port tariff.
+</div>
+
+</body>
+</html>

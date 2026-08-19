@@ -1,0 +1,69 @@
+Section,Field,Value,Notes
+Vessel,Vessel name,,
+Vessel,IMO,,
+Vessel,Flag,,
+Vessel,Vessel class,,Bulk / Tanker / Container / LNG / etc.
+Vessel,GT,,Gross tonnage (ITC 1969)
+Vessel,NT,,Net tonnage
+Vessel,DWT,,Deadweight (MT)
+Vessel,LOA (m),,
+Vessel,Beam (m),,
+Vessel,Summer draft (m),,
+Vessel,TEU capacity,,For containerships
+Voyage,Port of call,,UN/LOCODE
+Voyage,Port authority,,
+Voyage,Berth / terminal,,
+Voyage,ETA,,YYYY-MM-DD HH:MM (local)
+Voyage,ETD,,YYYY-MM-DD HH:MM (local)
+Voyage,Days alongside,,
+Voyage,Cargo type,,
+Voyage,Cargo qty,,MT / TEU / PAX
+Voyage,Call purpose,,Load / Discharge / Bunkering / Crew change / OPL
+Voyage,Charter party,,Voyage / Time / Bareboat
+Voyage,Owner,,
+Voyage,Charterer,,
+Charges (USD),Tonnage / port dues,,GT × rate (per port tariff)
+Charges (USD),Light & navigation dues,,Where billed separately (USCG / UK / etc.)
+Charges (USD),Pilotage inbound,,Per pilot tariff scale
+Charges (USD),Pilotage outbound,,
+Charges (USD),Pilotage night surcharge,,If applicable
+Charges (USD),Towage (tugs × ops),,Number × rate
+Charges (USD),Mooring (lines on),,
+Charges (USD),Mooring (lines off),,
+Charges (USD),Agency fee,,Per agency scale (FONASBA)
+Charges (USD),Cargo / wharfage dues,,Per MT or per TEU
+Charges (USD),Stevedoring (if owner-allocated),,Per cargo handling agreement
+Charges (USD),Garbage / waste reception,,EU 2019/883 indirect fee
+Charges (USD),ISPS / port security,,
+Charges (USD),Immigration / port-health,,
+Charges (USD),Freshwater supply,,
+Charges (USD),Slops / sludge disposal,,
+Charges (USD),Launch (boat) services,,Per movement
+Charges (USD),Communications / cable,,
+Charges (USD),Bunker barge call (if separate),,
+Charges (USD),Surveyor attendance,,
+Charges (USD),Customs clearance,,
+Charges (USD),Discount: ESI ≥ 31 (10%),,Negative number
+Charges (USD),Discount: Green Ship Programme,,
+Charges (USD),Discount: Repeat caller,,
+Charges (USD),Other / miscellaneous,,
+Surcharges (toggle 2026-11-10+),USTR Section 301 (US-port surcharge),,Off until 10 Nov 2026
+Surcharges (toggle 2026-11-10+),MOFCOM Special Port Fee (PRC-port surcharge),,Off until 10 Nov 2026
+Totals,Subtotal native currency,,
+Totals,FX rate (native to USD),,
+Totals,FX timestamp,,YYYY-MM-DD
+Totals,Total USD,,
+Totals,Cash advance requested,,Typically 80-100% of subtotal
+Reconciliation,Date PDA issued,,
+Reconciliation,Date FDA issued,,
+Reconciliation,Variance (FDA - PDA) USD,,
+Reconciliation,Variance (FDA - PDA) %,,
+Reconciliation,Top-3 variance lines,,
+Reconciliation,Reservation of rights,,Yes / No
+Agent,Agent name,,
+Agent,Agent address,,
+Agent,Contact email,,
+Agent,Phone,,
+Agent,FONASBA member,,Yes / No
+Agent,Bank details for advance,,
+,,,Generated from MetaCAD PDA template — https://metacad.io/commercial/port-disbursement/pda-template
