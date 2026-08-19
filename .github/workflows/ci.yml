@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Sync and test
+        run: |
+          uv sync --extra dev
+          uv run pytest -q
+      - name: Build wheel (catches hatch duplicate-path errors)
+        run: uv build
+      - name: CLI is on the wheel
+        run: |
+          uv run python - <<'PY'
+          import zipfile
+          from pathlib import Path
+          wheels = list(Path("dist").glob("*.whl"))
+          assert wheels, "no wheel"
+          with zipfile.ZipFile(wheels[0]) as z:
+              names = z.namelist()
+              text = z.read(next(n for n in names if n.endswith("entry_points.txt"))).decode()
+              assert "agentforge = gateway.cli:main" in text
+              assert "gateway/static/index.html" in names
+              assert any(n.startswith("templates/") for n in names)
+          PY
+      - name: agentforge --help
+        run: uv run agentforge --help

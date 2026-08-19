@@ -29,6 +29,15 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="agentforge",
         description="Convert an LLM into a PDA-query agent. OpenRouter first, local later.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "From Downloads or any folder (install once, then run):\n"
+            "  uv tool install git+https://github.com/vinothhacks/agentforge.git\n"
+            "  agentforge --dir path\\to\\pdfs\n\n"
+            "These fail on purpose:\n"
+            "  uv run agentforge   — only works after clone + cd into this repo\n"
+            "  uvx agentforge      — PyPI agentforge is a different package with no CLI"
+        ),
     )
     p.add_argument("--dir", default=".", help="Workspace folder (Claude Code pattern).")
     p.add_argument("--host", default="127.0.0.1")

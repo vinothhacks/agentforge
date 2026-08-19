@@ -1,29 +1,60 @@
 # AgentForge
 
-OpenRouter-first tool-using agent. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`.
+OpenRouter-first tool-using agent. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`. Indexes PDF / txt / md (not `.docx`).
 
-PyPI already has an unrelated `agentforge` with **no CLI**. Do not run `uvx agentforge` — that is the other package.
+## Run from Downloads (or any folder)
 
-Run **this** repo from GitHub:
+`uv run agentforge` looks for a **local** `pyproject.toml`. There is none in Downloads, so you get `Failed to spawn: agentforge`.
 
-```bash
+PyPI also has an **unrelated** `agentforge` with no CLI. `uvx agentforge` installs that other package.
+
+**Install once, then run from anywhere:**
+
+```powershell
+uv tool install git+https://github.com/vinothhacks/agentforge.git
+agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
+```
+
+Upgrade after a git push:
+
+```powershell
+uv tool install --force git+https://github.com/vinothhacks/agentforge.git
+```
+
+**One-shot (no install):**
+
+```powershell
 uvx --from git+https://github.com/vinothhacks/agentforge.git agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
 ```
 
-Paste an OpenRouter key in the UI, ask questions, get citations. Ingest extracts the PDF text layer once and builds both indexes.
+Same thing via `uv run` (note `--no-project --with`):
+
+```powershell
+uv run --no-project --with git+https://github.com/vinothhacks/agentforge.git agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
+```
+
+Paste an OpenRouter key in the UI, ask questions, get citations. First launch ingests PDF text and builds both indexes.
 
 Re-extract / re-index:
 
-```bash
-uvx --from git+https://github.com/vinothhacks/agentforge.git agentforge --ingest --dir path\to\pdfs
+```powershell
+agentforge --ingest --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
 ```
 
-From a clone:
+## From a clone
 
-```bash
+`uv run agentforge` works **only** after `cd` into this repo:
+
+```powershell
 git clone https://github.com/vinothhacks/agentforge.git
 cd agentforge
-uv run agentforge --dir path\to\pdfs
+uv run agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
+```
+
+From another folder, point uv at the clone:
+
+```powershell
+uv run --directory path\to\agentforge agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
 ```
 
 ## PDF extract benchmark
@@ -38,7 +69,7 @@ Full table and previews: [BENCHMARK.md](BENCHMARK.md). Reproduce: `uv run python
 
 ## Probe (optional)
 
-```bash
+```powershell
 agentforge --experiment
 ```
 
