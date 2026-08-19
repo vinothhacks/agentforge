@@ -84,7 +84,7 @@ def main() -> int:
             )
         )
 
-        q1 = "List every PDA mentioning demurrage"
+        q1 = "List every file mentioning demurrage"
         print(f"chat: {q1}")
         chat1 = c.post("/api/chat", json={"message": q1, "session_id": SESSION})
         c1 = chat1.json() if chat1.status_code == 200 else {"error": chat1.text, "status": chat1.status_code}
@@ -95,7 +95,7 @@ def main() -> int:
             chat1.status_code == 200
             and "rag_search" in tools1
             and enum.get("recall", 0) >= 0.90
-            and ("PDA-001" in text1 or "NEPTUNE" in text1 or "demurrage" in text1.lower())
+            and ("DOC-001" in text1 or "NEPTUNE" in text1 or "demurrage" in text1.lower())
         )
         rows.append(
             _ok(
@@ -113,7 +113,7 @@ def main() -> int:
             )
         )
 
-        q2 = "What is the PDA amount and berth window in file PDA-001-NEPTUNE.txt?"
+        q2 = "What is the account total and berth window in file DOC-001-NEPTUNE.txt?"
         print(f"chat: {q2}")
         chat2 = c.post("/api/chat", json={"message": q2, "session_id": SESSION})
         c2 = chat2.json() if chat2.status_code == 200 else {"error": chat2.text, "status": chat2.status_code}
@@ -122,7 +122,7 @@ def main() -> int:
         amount_ok = chat2.status_code == 200 and ("15000" in text2 or "15,000" in text2)
         rows.append(
             _ok(
-                "chat_pda001_amount",
+                "chat_doc001_amount",
                 amount_ok,
                 json.dumps({"status": chat2.status_code, "tools": tools2, "text": text2[:500]}),
             )
@@ -134,7 +134,7 @@ def main() -> int:
         c3 = chat3.json() if chat3.status_code == 200 else {"error": chat3.text, "status": chat3.status_code}
         tools3 = [t.get("tool") for t in (c3.get("traces") or []) if t.get("kind") == "tool"]
         text3 = c3.get("text") or ""
-        list_ok = chat3.status_code == 200 and ("fs_list" in tools3 or "PDA-" in text3)
+        list_ok = chat3.status_code == 200 and ("fs_list" in tools3 or "DOC-" in text3)
         rows.append(
             _ok(
                 "chat_fs_list",

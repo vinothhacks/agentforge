@@ -15,7 +15,7 @@ LATER_PACKS = {
     "excel_write": {
         "status": "stub",
         "v1": "denied",
-        "note": "Same ICP: reconcile PDAs into a sheet. Needs structured field extraction.",
+        "note": "Needs structured field extraction before a sheet export.",
     },
     "field_extraction": {
         "status": "stub",

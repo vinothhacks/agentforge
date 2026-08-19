@@ -2,6 +2,8 @@
 
 OpenRouter-first tool-using agent. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`. Indexes PDF / txt / md (not `.docx`).
 
+The UI lists **llmfit** and **Ollama** on the left, with install / download links. Workspace files and the chat can be downloaded from the same sidebar.
+
 ## Run from Downloads (or any folder)
 
 `uv run agentforge` looks for a **local** `pyproject.toml`. There is none in Downloads, so you get `Failed to spawn: agentforge`.
@@ -33,13 +35,18 @@ Same thing via `uv run` (note `--no-project --with`):
 uv run --no-project --with git+https://github.com/vinothhacks/agentforge.git agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
 ```
 
-Paste an OpenRouter key in the UI, ask questions, get citations. First launch ingests PDF text and builds both indexes.
+Paste an OpenRouter key in the UI and ask about the folder. First launch ingests PDF text and builds both indexes.
 
 Re-extract / re-index:
 
 ```powershell
 agentforge --ingest --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
 ```
+
+Local models:
+
+- [Download Ollama](https://ollama.com/download)
+- [llmfit on PyPI](https://pypi.org/project/llmfit/) or `uv tool install llmfit` (also a button in the UI)
 
 ## From a clone
 
@@ -59,7 +66,7 @@ uv run --directory path\to\agentforge agentforge --dir "C:\Users\sm2063\Document
 
 ## PDF extract benchmark
 
-Not a synthetic PDA sample set. Benchmark is **pypdf extract** on four downloaded public PDFs (40 pages).
+Benchmark is **pypdf extract** on four downloaded public PDFs (40 pages). Not a synthetic sample set.
 
 | PDFs | Pages | Text layer | Chars | Fail |
 | --- | --- | --- | --- | --- |
@@ -73,6 +80,6 @@ Full table and previews: [BENCHMARK.md](BENCHMARK.md). Reproduce: `uv run python
 agentforge --experiment
 ```
 
-Export to Excel comes next. Mail, MCP, web search, long-term memory, and a shell are out of v1.
+Mail, MCP, web search, long-term memory, and a shell are out of v1.
 
-Python 3.11+. Optional local path: [Ollama](https://ollama.com/download) and `uvx llmfit`.
+Python 3.11+.

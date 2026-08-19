@@ -21,7 +21,7 @@ def test_loop_with_fake(tmp_path):
 
     def complete_fn(**kwargs):
         return {
-            "content": "NEPTUNE PDA amount is USD 15000 (cite PDA-001).",
+            "content": "NEPTUNE account total is USD 15000 (cite DOC-001).",
             "tool_calls": [],
             "prompt_tokens": 20,
             "completion_tokens": 10,
@@ -31,7 +31,7 @@ def test_loop_with_fake(tmp_path):
 
     out = run_loop(
         spec,
-        "What is the PDA amount in file X?",
+        "What is the account total in file X?",
         history=[],
         executor=lambda n, a: {},
         complete_fn=complete_fn,
@@ -59,7 +59,7 @@ def test_loop_executes_tool_calls(tmp_path):
                 "finish_reason": "tool_calls",
             }
         return {
-            "content": "Demurrage in PDA-001-NEPTUNE.txt",
+            "content": "Demurrage in DOC-001-NEPTUNE.txt",
             "tool_calls": [],
             "prompt_tokens": 12,
             "completion_tokens": 8,
@@ -71,17 +71,17 @@ def test_loop_executes_tool_calls(tmp_path):
 
     def executor(name, args):
         executed.append((name, args))
-        return {"paths": ["PDA-001-NEPTUNE.txt"], "hits": []}
+        return {"paths": ["DOC-001-NEPTUNE.txt"], "hits": []}
 
     out = run_loop(
         spec,
-        "List PDAs mentioning demurrage",
+        "List files mentioning demurrage",
         history=[],
         executor=executor,
         complete_fn=complete_fn,
     )
     assert executed == [("rag_search", {"query": "demurrage"})]
-    assert "PDA-001" in out["text"]
+    assert "DOC-001" in out["text"]
     assert any(t.get("kind") == "tool" for t in out["traces"])
 
 

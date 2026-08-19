@@ -1,5 +1,5 @@
-id: pda-query
-template: pda-query
+id: document-query
+template: document-query
 model_pin:
   provider: openrouter
   name: openai/gpt-4o-mini
@@ -7,7 +7,7 @@ model_pin:
   num_ctx: 8192
 card_ref: null
 persona:
-  name: PDA desk
+  name: Workspace assistant
   language: en
 memory:
   short_term: true

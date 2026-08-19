@@ -8,18 +8,19 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from gateway.db import Store
 from gateway.evals import score_run
 from gateway.later import later_status
-from gateway.local_scan import scan as local_scan, try_local
+from gateway.local_scan import install_llmfit, scan as local_scan, try_local
 from gateway.packs.files import fs_list, fs_read
 from gateway.packs.rag import HybridIndex, ingest_workspace
+from gateway.paths import PathEscapeError, safe_join
 from gateway.probe.runner import run_probe
 from gateway.providers import ProviderError
 from gateway.runtime.loop import run_loop, sanitize_messages
@@ -46,7 +47,7 @@ class ProbeIn(BaseModel):
 
 
 def default_spec(workspace: Path, store: Store) -> AgentSpec:
-    spec_path = TEMPLATES / "pda-query" / "agentspec.yaml"
+    spec_path = TEMPLATES / "document-query" / "agentspec.yaml"
     spec = load_spec(spec_path) if spec_path.exists() else AgentSpec()
     spec.workspace_root = str(workspace)
     pin_json = store.get_setting("model_pin")
@@ -76,7 +77,7 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
         allow_headers=["*"],
     )
     index = HybridIndex(workspace)
-    skill_path = TEMPLATES / "pda-query" / "SKILL.md"
+    skill_path = TEMPLATES / "document-query" / "SKILL.md"
     skill_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
 
     def executor(name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -99,7 +100,6 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
             "ok": True,
             "workspace": str(workspace),
             "ingested": index.ready(),
-            "excel": "export to Excel comes next",
         }
 
     @app.get("/api/later")
@@ -149,8 +149,63 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
         return {k: card[k] for k in ("model_pin", "measured", "verdict", "cause") if k in card}
 
     @app.get("/api/scan")
-    def scan():
-        return local_scan()
+    def scan(quick: bool = True):
+        return local_scan(quick=quick)
+
+    @app.post("/api/install/llmfit")
+    def install_local_llmfit():
+        result = install_llmfit()
+        if not result.get("ok"):
+            raise HTTPException(status_code=500, detail=result)
+        return result
+
+    @app.get("/api/files")
+    def files():
+        skip = {".agentforge", ".git", ".venv"}
+        exts = {".pdf", ".txt", ".md", ".docx"}
+        rows = []
+        for p in workspace.rglob("*"):
+            if not p.is_file():
+                continue
+            rel = p.relative_to(workspace)
+            if any(part in skip for part in rel.parts):
+                continue
+            if p.suffix.lower() not in exts:
+                continue
+            rows.append({"path": rel.as_posix(), "size": p.stat().st_size})
+        rows.sort(key=lambda r: r["path"])
+        return {"files": rows}
+
+    @app.get("/api/download/file")
+    def download_file(path: str = Query(..., min_length=1)):
+        try:
+            target = safe_join(workspace, path)
+        except PathEscapeError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        if not target.is_file():
+            raise HTTPException(404, "file not found")
+        return FileResponse(target, filename=target.name)
+
+    @app.get("/api/export/chat")
+    def export_chat(session_id: str = "default"):
+        msgs = store.load_session(session_id)
+        lines = ["# AgentForge chat", ""]
+        for m in msgs:
+            role = m.get("role") or "unknown"
+            if role == "tool":
+                continue
+            content = (m.get("content") or "").strip()
+            if not content:
+                continue
+            lines.append(f"## {role}")
+            lines.append(content)
+            lines.append("")
+        body = "\n".join(lines).encode("utf-8")
+        return Response(
+            content=body,
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="agentforge-chat.md"'},
+        )
 
     @app.post("/api/scan/run")
     def scan_run():
@@ -235,7 +290,6 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
             "traces": out["traces"],
             "usage": totals,
             "eval": scored,
-            "excel_note": "Export to Excel comes next.",
         }
 
     @app.get("/api/traces")

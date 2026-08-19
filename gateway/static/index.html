@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AgentForge — PDA query</title>
+  <title>AgentForge</title>
   <style>
     :root {
       --bg: #0f1419;
@@ -28,8 +28,8 @@
     header h1 { font-size: 16px; margin: 0; font-weight: 600; }
     header .sub { color: var(--muted); font-size: 12px; }
     .meter { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
-    main { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 54px); }
-    aside { border-right: 1px solid var(--line); padding: 16px; background: #12181f; }
+    main { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 54px); }
+    aside { border-right: 1px solid var(--line); padding: 16px; background: #12181f; overflow: auto; }
     aside label { display: block; font-size: 11px; color: var(--muted); margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
     input, textarea, button {
       width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
@@ -37,9 +37,19 @@
     }
     button { cursor: pointer; background: var(--accent); border: 0; color: #062033; font-weight: 600; margin-top: 8px; }
     button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-    .note { font-size: 12px; color: var(--warn); margin-top: 10px; }
+    a.btn {
+      display: block; text-align: center; text-decoration: none; padding: 8px 10px;
+      border-radius: 6px; border: 1px solid var(--line); color: var(--ink); margin-top: 8px; font-weight: 600;
+    }
+    a.btn.primary { background: var(--accent); color: #062033; border: 0; }
+    .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
     .ok { color: var(--ok); }
     .bad { color: var(--bad); }
+    .status { font-size: 13px; margin-top: 6px; }
+    .files { list-style: none; padding: 0; margin: 8px 0 0; }
+    .files li { display: flex; gap: 8px; align-items: center; font-size: 12px; margin: 0 0 6px; }
+    .files span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+    .files a { color: var(--accent); text-decoration: none; flex: none; }
     .chat { display: flex; flex-direction: column; height: calc(100vh - 54px); }
     .log { flex: 1; overflow: auto; padding: 20px; }
     .bubble { max-width: 720px; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; }
@@ -54,7 +64,7 @@
 <body>
   <header>
     <div>
-      <h1>AgentForge · PDA query</h1>
+      <h1>AgentForge</h1>
       <div class="sub" id="ws"></div>
     </div>
     <div class="meter" id="meter">tokens 0 / 32000 · $0.00 / $0.50</div>
@@ -67,16 +77,27 @@
       <label>Fast probe (2-min path)</label>
       <button class="ghost" id="probe">Run fast probe</button>
       <div id="probeOut" class="sub"></div>
-      <label>Local (optional)</label>
-      <button class="ghost" id="scan">Want this free on your machine?</button>
+
+      <label>llmfit</label>
+      <div id="llmfitOut" class="status">checking llmfit…</div>
+      <button class="ghost" id="installLlmfit">Install llmfit</button>
+      <a class="btn" id="llmfitPypi" href="https://pypi.org/project/llmfit/" target="_blank" rel="noreferrer">Download llmfit (PyPI)</a>
+
+      <label>Ollama</label>
+      <div id="ollamaOut" class="status">checking Ollama…</div>
+      <a class="btn primary" href="https://ollama.com/download" target="_blank" rel="noreferrer">Download Ollama</a>
+      <button class="ghost" id="scan">Pin a local model</button>
       <div id="scanOut" class="sub"></div>
-      <p class="note">Export to Excel comes next. v1 only queries this folder.</p>
+
+      <label>Workspace files</label>
+      <ul class="files" id="fileList"></ul>
+      <a class="btn" id="chatDl" href="/api/export/chat">Download chat (.md)</a>
       <div id="ingestWarn" class="note"></div>
     </aside>
     <section class="chat">
       <div class="log" id="log"></div>
       <form class="composer" id="form">
-        <textarea id="msg" placeholder="Which PDAs mention demurrage?"></textarea>
+        <textarea id="msg" placeholder="Ask about files in this folder…"></textarea>
         <button type="submit">Ask</button>
       </form>
     </section>
@@ -107,6 +128,39 @@
       return data;
     }
 
+    function renderLocal(s) {
+      const lf = document.getElementById("llmfitOut");
+      lf.className = "status " + (s.llmfit ? "ok" : "bad");
+      lf.textContent = s.llmfit
+        ? "llmfit is installed."
+        : "llmfit not found. Install it here or: " + (s.llmfit_install || "uv tool install llmfit");
+      if (s.llmfit_pypi) document.getElementById("llmfitPypi").href = s.llmfit_pypi;
+      const ol = document.getElementById("ollamaOut");
+      ol.className = "status " + (s.ollama ? "ok" : "bad");
+      ol.textContent = s.ollama ? "Ollama is installed." : "Ollama not found. Use Download Ollama above.";
+    }
+
+    async function loadFiles() {
+      const data = await j("/api/files");
+      const ul = document.getElementById("fileList");
+      ul.innerHTML = "";
+      (data.files || []).forEach((f) => {
+        const li = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = f.path;
+        name.title = f.path;
+        const a = document.createElement("a");
+        a.href = "/api/download/file?path=" + encodeURIComponent(f.path);
+        a.textContent = "Download";
+        li.appendChild(name);
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      if (!(data.files || []).length) {
+        ul.innerHTML = "<li><span>No PDF / txt / md / docx files in this folder.</span></li>";
+      }
+    }
+
     async function boot() {
       const h = await j("/api/health");
       document.getElementById("ws").textContent = h.workspace + (h.ingested ? " · indexed" : " · not ingested");
@@ -115,6 +169,8 @@
         document.getElementById("ingestWarn").textContent =
           w.no_text_layer_count + " files have no text layer and will miss lexical search.";
       }
+      renderLocal(await j("/api/scan"));
+      await loadFiles();
     }
 
     document.getElementById("saveKey").onclick = async () => {
@@ -135,18 +191,32 @@
       }
     };
 
+    document.getElementById("installLlmfit").onclick = async () => {
+      document.getElementById("llmfitOut").textContent = "installing llmfit…";
+      try {
+        const r = await j("/api/install/llmfit", { method: "POST" });
+        renderLocal(await j("/api/scan"));
+        add("bot", r.llmfit ? "llmfit is installed." : "llmfit install finished. Check the sidebar.");
+      } catch (e) {
+        document.getElementById("llmfitOut").className = "status bad";
+        document.getElementById("llmfitOut").textContent = String(e);
+      }
+    };
+
     document.getElementById("scan").onclick = async () => {
       document.getElementById("scanOut").textContent = "scanning…";
       try {
-        const s = await j("/api/scan");
-        let msg = (s.ollama ? "Ollama ok. " : "Install Ollama: " + (s.ollama_install || "") + " ")
-          + (s.llmfit ? "llmfit ok." : "Run: uvx llmfit");
-        document.getElementById("scanOut").textContent = msg;
+        renderLocal(await j("/api/scan"));
         const r = await j("/api/scan/run", { method: "POST" });
-        document.getElementById("scanOut").textContent += " → " + (r.english || r.reason || (r.ok ? "local pin ok" : "staying on cloud"));
+        document.getElementById("scanOut").textContent = r.english || r.reason || (r.ok ? "local pin ok" : "staying on cloud");
       } catch (e) {
         document.getElementById("scanOut").textContent = String(e);
       }
+    };
+
+    document.getElementById("chatDl").onclick = (ev) => {
+      ev.preventDefault();
+      window.location.href = "/api/export/chat?session_id=" + encodeURIComponent(session);
     };
 
     document.getElementById("form").onsubmit = async (ev) => {
@@ -160,7 +230,7 @@
           body: JSON.stringify({ message: text, session_id: session }) });
         session = r.session_id;
         const tools = (r.traces || []).filter(t => t.kind === "tool").map(t => t.tool).join(", ");
-        add("bot", r.text || "(no text)", (tools ? "tools: " + tools + " · " : "") + (r.excel_note || ""));
+        add("bot", r.text || "(no text)", tools ? "tools: " + tools : "");
         if (r.eval && r.eval.enumeration) {
           add("bot", "enumeration recall " + r.eval.enumeration.recall +
             (r.eval.enumeration.cause ? " · FAIL " + r.eval.enumeration.cause : " · pass"));

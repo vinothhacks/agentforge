@@ -1,4 +1,4 @@
-"""Template-first compiler: skip the interview, emit AgentSpec from pda-query + card."""
+"""Template-first compiler: skip the interview, emit AgentSpec from document-query + card."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from gateway.stats import max_steps_from_lo95, max_tools_from_lo95
 TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
 
-def compile_pda_query(workspace: Path, card: dict | None = None) -> AgentSpec:
-    src = TEMPLATES / "pda-query" / "agentspec.yaml"
+def compile_workspace(workspace: Path, card: dict | None = None) -> AgentSpec:
+    src = TEMPLATES / "document-query" / "agentspec.yaml"
     spec = load_spec(src) if src.exists() else AgentSpec()
     spec.workspace_root = str(workspace.resolve())
     spec.memory.long_term = False

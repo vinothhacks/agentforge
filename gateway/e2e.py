@@ -13,7 +13,7 @@ from httpx import ASGITransport, Client
 
 from gateway.app import make_app
 from gateway.db import Store
-from gateway.evals import write_sample_pdas
+from gateway.evals import write_sample_docs
 from gateway.packs.rag import ingest_workspace
 
 PREFERRED_LOCAL = ("ollama", "gemma4:cloud")
@@ -22,12 +22,12 @@ PREFERRED_CLOUD = ("openrouter", "openai/gpt-4o-mini")
 QUESTIONS = [
     {
         "id": "enumeration",
-        "message": "List every PDA mentioning demurrage",
+        "message": "List every file mentioning demurrage",
         "require_tool": "rag_search",
     },
     {
         "id": "cite_amount",
-        "message": "What is the PDA amount and berth window in file PDA-001-NEPTUNE.txt?",
+        "message": "What is the account total and berth window in file DOC-001-NEPTUNE.txt?",
         "require_any_tool": ("rag_search", "fs_read"),
         "needle": "15000",
     },
@@ -79,7 +79,7 @@ def run_e2e(
 ) -> dict[str, Any]:
     workspace = workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
-    write_sample_pdas(workspace)
+    write_sample_docs(workspace)
     ingest_workspace(workspace)
 
     home = workspace / ".agentforge"

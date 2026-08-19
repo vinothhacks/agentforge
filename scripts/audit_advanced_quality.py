@@ -15,7 +15,7 @@ def main() -> None:
     warning = ingest_workspace(ROOT)
     idx = HybridIndex(ROOT)
     queries = [
-        "List every PDA mentioning demurrage",
+        "List every file mentioning demurrage",
         "demurrage",
         "pilotage inwards",
         "MSC AURORA",

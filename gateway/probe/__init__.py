@@ -23,11 +23,11 @@ PROBE_TOOLS = [
         "type": "function",
         "function": {
             "name": "lookup",
-            "description": "Look up a shipping code. Use when the user asks for a code value.",
+            "description": "Look up a code. Use when the user asks for a code value.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "code": {"type": "string", "description": "The code to look up, e.g. PDA-1"}
+                    "code": {"type": "string", "description": "The code to look up, e.g. CODE-1"}
                 },
                 "required": ["code"],
             },
@@ -89,7 +89,7 @@ def run_step(
                 name=name,
                 messages=[
                     {"role": "system", "content": "You are a tool-using assistant. Use lookup when asked for a code."},
-                    {"role": "user", "content": "Look up code PDA-1 using the lookup tool."},
+                    {"role": "user", "content": "Look up code CODE-1 using the lookup tool."},
                 ],
                 tools=PROBE_TOOLS,
                 num_ctx=num_ctx,
@@ -116,7 +116,7 @@ def run_step(
                 name=name,
                 messages=[
                     {"role": "system", "content": "Use the lookup tool. Always include the code argument."},
-                    {"role": "user", "content": "Look up the default PDA code."},
+                    {"role": "user", "content": "Look up the default lookup code."},
                 ],
                 tools=PROBE_TOOLS,
                 num_ctx=num_ctx,
@@ -139,7 +139,7 @@ def run_step(
                         name=name,
                         messages=[
                             {"role": "system", "content": "Use the lookup tool."},
-                            {"role": "user", "content": "Look up the default PDA code."},
+                            {"role": "user", "content": "Look up the default lookup code."},
                             {
                                 "role": "assistant",
                                 "content": resp["content"],
@@ -158,7 +158,7 @@ def run_step(
                                 "role": "tool",
                                 "tool_call_id": calls[0]["id"] or "call_1",
                                 "content": json.dumps(
-                                    {"error": "schema_reject", "missing": "code", "hint": "call lookup with code=PDA-1"}
+                                    {"error": "schema_reject", "missing": "code", "hint": "call lookup with code=CODE-1"}
                                 ),
                             },
                         ],
@@ -182,9 +182,9 @@ def run_step(
                 messages=[
                     {
                         "role": "system",
-                        "content": "First call lookup with code PDA-1, then call read_item with id=item-1.",
+                        "content": "First call lookup with code CODE-1, then call read_item with id=item-1.",
                     },
-                    {"role": "user", "content": "Find PDA-1 and then read the item."},
+                    {"role": "user", "content": "Find CODE-1 and then read the item."},
                 ],
                 tools=PROBE_TOOLS,
                 num_ctx=num_ctx,
@@ -201,7 +201,7 @@ def run_step(
                     provider=provider,
                     name=name,
                     messages=[
-                        {"role": "system", "content": "You already looked up PDA-1. Now call read_item with id item-1."},
+                        {"role": "system", "content": "You already looked up CODE-1. Now call read_item with id item-1."},
                         {"role": "user", "content": "Now read the item."},
                         {
                             "role": "assistant",

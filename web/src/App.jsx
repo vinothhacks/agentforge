@@ -39,7 +39,7 @@ export default function App() {
   return (
     <div style={{ fontFamily: "Segoe UI, sans-serif", background: "#0f1419", color: "#e8eef4", minHeight: "100vh" }}>
       <header style={{ padding: 12, borderBottom: "1px solid #2a3542" }}>
-        <strong>AgentForge · PDA query</strong>
+        <strong>AgentForge</strong>
         <div style={{ opacity: 0.6, fontSize: 12 }}>{ws}</div>
         <div style={{ fontSize: 12 }}>{meter}</div>
       </header>
@@ -56,7 +56,13 @@ export default function App() {
         >
           Save key
         </button>
-        <p style={{ color: "#e0a14a", fontSize: 12 }}>Export to Excel comes next.</p>
+        <p style={{ color: "#8b9aab", fontSize: 12 }}>
+          <a href="https://pypi.org/project/llmfit/" style={{ color: "#3d9cf0" }}>llmfit</a>
+          {" · "}
+          <a href="https://ollama.com/download" style={{ color: "#3d9cf0" }}>Download Ollama</a>
+          {" · "}
+          <a href="/api/export/chat" style={{ color: "#3d9cf0" }}>Download chat</a>
+        </p>
       </aside>
       <main style={{ padding: 16 }}>
         {log.map((m, i) => (
@@ -65,7 +71,7 @@ export default function App() {
           </pre>
         ))}
         <form onSubmit={send}>
-          <textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Which PDAs mention demurrage?" />
+          <textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ask about files in this folder…" />
           <button type="submit">Ask</button>
         </form>
       </main>

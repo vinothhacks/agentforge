@@ -32,7 +32,7 @@ class FakeLLM:
                     "finish_reason": "stop",
                 }
             name = "lookup"
-            args = '{"code":"PDA-1"}'
+            args = '{"code":"CODE-1"}'
             roles = [m.get("role") for m in messages]
             if "tool" in roles or any("item-1" in str(m.get("content", "")) for m in messages if m.get("role") == "tool"):
                 name = "read_item"

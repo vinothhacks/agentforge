@@ -13,8 +13,8 @@ from gateway.db import Store
 
 ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "advanced"
 QUESTIONS = [
-    "List every generated PDA that mentions demurrage. Cite file names.",
-    "What is the TOTAL PDA estimate and berth window for vessel MSC AURORA?",
+        "List every generated file that mentions demurrage. Cite file names.",
+    "What is the TOTAL estimate and berth window for vessel MSC AURORA?",
     "Which documents mention Paldiski South Harbour?",
 ]
 

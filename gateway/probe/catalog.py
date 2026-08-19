@@ -6,6 +6,8 @@ import json
 import subprocess
 from typing import Any
 
+from gateway.bins import which_tool
+
 
 def catalog_flag(model_name: str, llmfit_json: dict[str, Any] | None = None) -> str:
     """Return yes / no / unknown."""
@@ -26,10 +28,17 @@ def catalog_flag(model_name: str, llmfit_json: dict[str, Any] | None = None) -> 
     return "unknown"
 
 
+def _llmfit() -> str:
+    exe = which_tool("llmfit")
+    if not exe:
+        raise FileNotFoundError("llmfit")
+    return exe
+
+
 def load_llmfit_fit(limit: int = 400) -> dict[str, Any] | None:
     try:
         proc = subprocess.run(
-            ["llmfit", "recommend", "--json", "--use-case", "general", "--limit", str(limit)],
+            [_llmfit(), "recommend", "--json", "--use-case", "general", "--limit", str(limit)],
             capture_output=True,
             text=True,
             timeout=60,
@@ -45,7 +54,7 @@ def load_llmfit_fit(limit: int = 400) -> dict[str, Any] | None:
 def system_specs() -> dict[str, Any] | None:
     try:
         proc = subprocess.run(
-            ["llmfit", "--json", "system"],
+            [_llmfit(), "--json", "system"],
             capture_output=True,
             text=True,
             timeout=30,
@@ -54,7 +63,7 @@ def system_specs() -> dict[str, Any] | None:
         if proc.returncode != 0:
             # some builds: llmfit system --json
             proc = subprocess.run(
-                ["llmfit", "system", "--json"],
+                [_llmfit(), "system", "--json"],
                 capture_output=True,
                 text=True,
                 timeout=30,

@@ -1,4 +1,4 @@
-"""PDF-extract benchmark: downloaded source PDFs only. No synthetic PDA text files."""
+"""PDF-extract benchmark: downloaded source PDFs only. No synthetic sample text files."""
 
 from __future__ import annotations
 

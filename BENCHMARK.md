@@ -1,6 +1,6 @@
 # PDF extract benchmark
 
-Suite: **pdf_extract_only**. Downloaded public PDFs in `fixtures/advanced/source/`. No synthetic PDA `.txt` files.
+Suite: **pdf_extract_only**. Downloaded public PDFs in `fixtures/advanced/source/`. No synthetic sample `.txt` files.
 
 Reproduce:
 

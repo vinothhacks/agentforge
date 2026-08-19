@@ -10,7 +10,7 @@ TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
     "rag_search": {
         "type": "object",
         "properties": {
-            "query": {"type": "string", "description": "Search query over PDA PDFs"},
+            "query": {"type": "string", "description": "Search query over workspace files"},
             "limit": {"type": "integer", "minimum": 1, "maximum": 80, "default": 12},
         },
         "required": ["query"],
@@ -42,7 +42,7 @@ OPENAI_TOOLS = [
         },
     }
     for name, desc in [
-        ("rag_search", "Search the PDA folder. Hybrid lexical (FTS5) + vectors. For 'list every X' pass the term or the full question — lexical paths enumerate matching files."),
+        ("rag_search", "Search the workspace. Hybrid lexical (FTS5) + vectors. For 'list every X' pass the term or the full question — lexical paths enumerate matching files."),
         ("fs_list", "List files in the workspace folder (read-only)."),
         ("fs_read", "Read a file from the workspace (read-only). Use to cite a page."),
     ]

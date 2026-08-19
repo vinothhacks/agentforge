@@ -44,7 +44,7 @@ Catalog flags are read client-side from llmfit `capability_ids` (REST has no `us
 
 ## Gate rule (from the plan)
 
-- `D < 0.10` — feature; stop or shrink to the PDA template.
+- `D < 0.10` - feature; stop or shrink to the document template.
 - `D >= 0.25` — catalog lies often; the probe is the product. Continue P0.
 - `0.10 <= D < 0.25` — probe is a gate, not the headline. Continue P0; do not market certification.
 

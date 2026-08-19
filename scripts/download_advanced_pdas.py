@@ -1,4 +1,4 @@
-"""Download public PDA-related documents into fixtures/advanced/source."""
+"""Download public port-cost documents into fixtures/advanced/source."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ FILES = [
 
 
 def main() -> int:
-    headers = {"User-Agent": "AgentForge-eval/0.1 (research corpus; local PDA-query tests)"}
+    headers = {"User-Agent": "AgentForge-eval/0.1 (research corpus; local document-query tests)"}
     ok = 0
     with httpx.Client(timeout=60.0, follow_redirects=True, headers=headers) as client:
         for name, url in FILES:

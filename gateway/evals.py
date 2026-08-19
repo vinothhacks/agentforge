@@ -1,4 +1,4 @@
-"""Golden evals for the PDA-folder job. Enumeration recall vs grep ground truth."""
+"""Golden evals for the workspace-folder job. Enumeration recall vs grep ground truth."""
 
 from __future__ import annotations
 
@@ -80,30 +80,30 @@ def score_run(
     }
 
 
-def write_sample_pdas(folder: Path, n: int = 12) -> None:
+def write_sample_docs(folder: Path, n: int = 12) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     vessels = ["NEPTUNE", "ORION", "VESTA", "ATLAS", "HERA", "JUNO"]
     ports = ["SGSIN", "NLRTM", "DEHAM", "USNYC", "CNSHA", "AEJEA"]
     for i in range(n):
         dem = "Demurrage applicable at USD 12,000/day after 24h." if i % 3 == 0 else "No detention charges."
         body = (
-            f"PORT DISBURSEMENT ACCOUNT\n"
+            f"PORT COST ESTIMATE\n"
             f"Vessel: {vessels[i % len(vessels)]}\n"
             f"Port: {ports[i % len(ports)]}\n"
-            f"PDA amount: USD {15000 + i * 1370}\n"
+            f"Account total: USD {15000 + i * 1370}\n"
             f"Berth window: 2026-09-0{(i % 8) + 1} 06:00 LT\n"
             f"{dem}\n"
             f"Pilotage: USD 2100\n"
             f"Agency fee: USD 950\n"
         )
-        (folder / f"PDA-{i+1:03d}-{vessels[i % len(vessels)]}.txt").write_text(body, encoding="utf-8")
+        (folder / f"DOC-{i+1:03d}-{vessels[i % len(vessels)]}.txt").write_text(body, encoding="utf-8")
 
 
 GOLDEN = [
-    "What is the PDA amount / berth window in file PDA-001-NEPTUNE.txt?",
-    "List PDAs that mention demurrage.",
+    "What is the account total / berth window in file DOC-001-NEPTUNE.txt?",
+    "List files that mention demurrage.",
     "Cite the page for vessel Y.",
-    "List every PDA mentioning demurrage",
+    "List every file mentioning demurrage",
 ]
 
 
@@ -116,7 +116,7 @@ def run_offline_golden(workspace: Path) -> dict[str, Any]:
 
     ingest_workspace(workspace)
     idx = HybridIndex(workspace)
-    question = "List every PDA mentioning demurrage"
+    question = "List every file mentioning demurrage"
     result = idx.search(question, limit=40)
     scored = score_run(
         index=idx,

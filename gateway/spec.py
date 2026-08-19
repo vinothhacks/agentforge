@@ -19,7 +19,7 @@ class ModelPin(BaseModel):
 
 
 class Persona(BaseModel):
-    name: str = "PDA desk"
+    name: str = "Workspace assistant"
     language: str = "en"
 
 
@@ -49,8 +49,8 @@ class Budgets(BaseModel):
 
 
 class AgentSpec(BaseModel):
-    id: str = "pda-query"
-    template: str = "pda-query"
+    id: str = "document-query"
+    template: str = "document-query"
     model_pin: ModelPin = Field(default_factory=ModelPin)
     card_ref: str | None = None
     persona: Persona = Field(default_factory=Persona)

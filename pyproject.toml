@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "agentforge"
 version = "0.1.0"
-description = "Convert any LLM into an AI agent. OpenRouter-first PDA-query agent."
+description = "Convert any LLM into an AI agent. OpenRouter-first document Q&A."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
