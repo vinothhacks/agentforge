@@ -1,18 +1,29 @@
 # AgentForge
 
-OpenRouter-first tool-using agent. `uvx` / `pip`. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`.
+OpenRouter-first tool-using agent. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`.
 
-Point it at a **folder of PDFs**. Ingest extracts the text layer once and builds both indexes.
+PyPI already has an unrelated `agentforge` with **no CLI**. Do not run `uvx agentforge` — that is the other package.
+
+Run **this** repo from GitHub:
 
 ```bash
-uvx agentforge --dir path/to/pdfs
-# paste an OpenRouter key, ask questions, get citations
+uvx --from git+https://github.com/vinothhacks/agentforge.git agentforge --dir "C:\Users\sm2063\Documents\Vinoth_N_Package_v1"
 ```
+
+Paste an OpenRouter key in the UI, ask questions, get citations. Ingest extracts the PDF text layer once and builds both indexes.
 
 Re-extract / re-index:
 
 ```bash
-agentforge --ingest --dir path/to/pdfs
+uvx --from git+https://github.com/vinothhacks/agentforge.git agentforge --ingest --dir path\to\pdfs
+```
+
+From a clone:
+
+```bash
+git clone https://github.com/vinothhacks/agentforge.git
+cd agentforge
+uv run agentforge --dir path\to\pdfs
 ```
 
 ## PDF extract benchmark
