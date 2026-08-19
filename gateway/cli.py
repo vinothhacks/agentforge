@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import socket
 import sys
 import webbrowser
 from pathlib import Path
@@ -23,6 +24,18 @@ def _home(workspace: Path) -> Path:
     d = workspace / ".agentforge"
     d.mkdir(exist_ok=True)
     return d
+
+
+def first_free_port(host: str, start: int, span: int = 30) -> int:
+    for port in range(start, start + span):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
+            try:
+                sock.bind((host, port))
+            except OSError:
+                continue
+            return port
+    raise RuntimeError(f"no free port in {start}-{start + span - 1} on {host}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -116,13 +129,22 @@ def main(argv: list[str] | None = None) -> int:
     from gateway.app import make_app
 
     app = make_app(workspace, store)
-    url = f"http://{args.host}:{args.port}"
+    port = args.port
+    try:
+        chosen = first_free_port(args.host, args.port)
+    except RuntimeError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    if chosen != args.port:
+        print(f"port {args.port} is in use — using {chosen}", file=sys.stderr)
+        port = chosen
+    url = f"http://{args.host}:{port}"
     print(f"AgentForge  workspace={workspace}")
-    print(f"Open {url}  - paste an OpenRouter key, ask about your files.")
-    print("llmfit and Ollama download links are in the sidebar.")
+    print(f"Open {url}  - paste an OpenRouter key, or pick a local model that fits this PC.")
+    print("Sidebar: llmfit hardware fit, Ollama pull, file download.")
     if not args.no_browser:
         webbrowser.open(url)
-    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+    uvicorn.run(app, host=args.host, port=port, log_level="info")
     return 0
 
 

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
-import subprocess
 from typing import Any
 
-from gateway.bins import which_tool
+from gateway.llmfit_bridge import recommend_chat, run_llmfit, system_specs as hardware_system
 
 
 def catalog_flag(model_name: str, llmfit_json: dict[str, Any] | None = None) -> str:
@@ -28,59 +26,21 @@ def catalog_flag(model_name: str, llmfit_json: dict[str, Any] | None = None) -> 
     return "unknown"
 
 
-def _llmfit() -> str:
-    exe = which_tool("llmfit")
-    if not exe:
-        raise FileNotFoundError("llmfit")
-    return exe
-
-
 def load_llmfit_fit(limit: int = 400) -> dict[str, Any] | None:
-    try:
-        proc = subprocess.run(
-            [_llmfit(), "recommend", "--json", "--use-case", "general", "--limit", str(limit)],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            check=False,
-        )
-        if proc.returncode != 0:
-            return None
-        return json.loads(proc.stdout)
-    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
-        return None
+    models = recommend_chat(limit=min(limit, 24))
+    if models:
+        return {"models": models}
+    return run_llmfit(["recommend", "-n", str(min(limit, 80)), "--use-case", "general"])
 
 
 def system_specs() -> dict[str, Any] | None:
-    try:
-        proc = subprocess.run(
-            [_llmfit(), "--json", "system"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        if proc.returncode != 0:
-            # some builds: llmfit system --json
-            proc = subprocess.run(
-                [_llmfit(), "system", "--json"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-        if proc.returncode != 0:
-            return None
-        return json.loads(proc.stdout)
-    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
-        return None
+    return hardware_system()
 
 
 def nominate(limit: int = 8) -> list[dict[str, Any]]:
-    data = load_llmfit_fit(limit=80) or {"models": []}
     out = []
-    for row in data.get("models", []):
-        flag = "yes" if "tool_use" in (row.get("capability_ids") or []) else "no"
+    for row in recommend_chat(limit=max(limit, 8)):
+        flag = "yes" if row.get("tool_use") else "no"
         out.append(
             {
                 "name": row.get("name"),
@@ -89,7 +49,7 @@ def nominate(limit: int = 8) -> list[dict[str, Any]]:
                 "fit_level": row.get("fit_level"),
                 "estimated_tps": row.get("estimated_tps"),
                 "best_quant": row.get("best_quant"),
-                "usable_context": row.get("usable_context"),
+                "usable_context": row.get("effective_context_length") or row.get("usable_context"),
             }
         )
         if len(out) >= limit:

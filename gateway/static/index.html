@@ -41,7 +41,13 @@
       display: block; text-align: center; text-decoration: none; padding: 8px 10px;
       border-radius: 6px; border: 1px solid var(--line); color: var(--ink); margin-top: 8px; font-weight: 600;
     }
-    a.btn.primary { background: var(--accent); color: #062033; border: 0; }
+    select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+      background: var(--bg); color: var(--ink); font: inherit; margin-top: 6px; }
+    .hw { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .models { list-style: none; padding: 0; margin: 8px 0 0; max-height: 220px; overflow: auto; }
+    .models li { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+    .models button { width: auto; margin: 4px 0 0; padding: 4px 8px; font-size: 12px; }
+    .fit { text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
     .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
     .ok { color: var(--ok); }
     .bad { color: var(--bad); }
@@ -82,12 +88,20 @@
       <div id="llmfitOut" class="status">checking llmfit…</div>
       <button class="ghost" id="installLlmfit">Install llmfit</button>
       <a class="btn" id="llmfitPypi" href="https://pypi.org/project/llmfit/" target="_blank" rel="noreferrer">Download llmfit (PyPI)</a>
+      <div id="hw" class="hw"></div>
+
+      <label>Model that fits this PC</label>
+      <div id="currentModel" class="status">loading models…</div>
+      <select id="modelPick"></select>
+      <button id="useModel">Use selected model</button>
+      <button class="ghost" id="pullModel">Download selected with Ollama</button>
+      <button class="ghost" id="scan">Auto-pick best installed local model</button>
+      <div id="scanOut" class="sub"></div>
+      <ul class="models" id="modelList"></ul>
 
       <label>Ollama</label>
       <div id="ollamaOut" class="status">checking Ollama…</div>
       <a class="btn primary" href="https://ollama.com/download" target="_blank" rel="noreferrer">Download Ollama</a>
-      <button class="ghost" id="scan">Pin a local model</button>
-      <div id="scanOut" class="sub"></div>
 
       <label>Workspace files</label>
       <ul class="files" id="fileList"></ul>
@@ -138,6 +152,70 @@
       const ol = document.getElementById("ollamaOut");
       ol.className = "status " + (s.ollama ? "ok" : "bad");
       ol.textContent = s.ollama ? "Ollama is installed." : "Ollama not found. Use Download Ollama above.";
+      const sys = s.system || {};
+      const ram = s.available_ram_gb || sys.available_ram_gb;
+      const bits = [];
+      if (sys.cpu_name) bits.push(sys.cpu_name);
+      if (ram) bits.push(Number(ram).toFixed(1) + " GB free RAM");
+      if (sys.total_ram_gb) bits.push("of " + Number(sys.total_ram_gb).toFixed(1) + " GB");
+      if (sys.gpu_name && sys.gpu_name !== "Name") bits.push("GPU " + sys.gpu_name);
+      else if (sys.has_gpu) bits.push("GPU present, VRAM unknown (CPU fit used)");
+      document.getElementById("hw").textContent = bits.join(" · ");
+    }
+
+    function fillModels(s) {
+      const cur = s.current || {};
+      document.getElementById("currentModel").textContent =
+        "Using " + (cur.provider || "?") + " / " + (cur.name || "?");
+      const pick = document.getElementById("modelPick");
+      pick.innerHTML = "";
+      const opts = [];
+      opts.push({ value: "openrouter|openai/gpt-4o-mini", label: "Cloud · openai/gpt-4o-mini" });
+      (s.installed || []).forEach((m) => {
+        opts.push({
+          value: "ollama|" + m.name,
+          label: "Installed · " + m.name + " · " + (m.fit_level || "") + (m.size_gb ? " · " + m.size_gb + " GB" : ""),
+        });
+      });
+      (s.suggested || []).forEach((m) => {
+        opts.push({
+          value: "ollama|" + m.name,
+          label: "Fits PC · " + m.name + " · " + (m.fit_level || "") + " · pull " + (m.size_gb || "") + " GB",
+        });
+      });
+      opts.forEach((o) => {
+        const el = document.createElement("option");
+        el.value = o.value;
+        el.textContent = o.label;
+        pick.appendChild(el);
+      });
+      const want = (cur.provider || "openrouter") + "|" + (cur.name || "openai/gpt-4o-mini");
+      if ([...pick.options].some((o) => o.value === want)) pick.value = want;
+
+      const ul = document.getElementById("modelList");
+      ul.innerHTML = "";
+      function addRow(title, m, extra) {
+        const li = document.createElement("li");
+        li.innerHTML = "<strong>" + title + "</strong> <span class='fit'>" + (m.fit_level || "") + "</span><br/>" + extra;
+        ul.appendChild(li);
+      }
+      (s.installed || []).forEach((m) => addRow(m.name, m, "installed · " + (m.size_gb || "?") + " GB"));
+      (s.suggested || []).slice(0, 6).forEach((m) => addRow(m.name, m, (m.notes || "library") + " · not pulled yet"));
+      (s.recommended || []).slice(0, 5).forEach((m) => {
+        addRow(
+          m.name,
+          m,
+          "llmfit " + (m.parameter_count || "") + " · RAM " + (m.memory_required_gb || "?") + " GB · " + (m.run_mode || "")
+        );
+      });
+    }
+
+    async function loadModels() {
+      document.getElementById("currentModel").textContent = "scoring models against this PC…";
+      const s = await j("/api/models");
+      renderLocal(s);
+      fillModels(s);
+      return s;
     }
 
     async function loadFiles() {
@@ -171,6 +249,9 @@
       }
       renderLocal(await j("/api/scan"));
       await loadFiles();
+      loadModels().catch((e) => {
+        document.getElementById("currentModel").textContent = String(e);
+      });
     }
 
     document.getElementById("saveKey").onclick = async () => {
@@ -191,12 +272,58 @@
       }
     };
 
+    document.getElementById("useModel").onclick = async () => {
+      const raw = document.getElementById("modelPick").value;
+      const [provider, name] = raw.split("|");
+      document.getElementById("scanOut").textContent = "pinning " + name + "…";
+      try {
+        const r = await j("/api/model", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ provider, name, probe: false }),
+        });
+        document.getElementById("scanOut").textContent = "Using " + r.model_pin.provider + " / " + r.model_pin.name;
+        document.getElementById("currentModel").textContent = "Using " + r.model_pin.provider + " / " + r.model_pin.name;
+        add("bot", "Model set to " + r.model_pin.provider + " / " + r.model_pin.name + ". Ask a question.");
+      } catch (e) {
+        document.getElementById("scanOut").textContent = String(e);
+      }
+    };
+
+    document.getElementById("pullModel").onclick = async () => {
+      const raw = document.getElementById("modelPick").value;
+      const [provider, name] = raw.split("|");
+      if (provider !== "ollama") {
+        document.getElementById("scanOut").textContent = "Pull is for Ollama tags only.";
+        return;
+      }
+      document.getElementById("scanOut").textContent = "ollama pull " + name + " (this can take several minutes)…";
+      try {
+        await j("/api/ollama/pull", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ name }),
+        });
+        await j("/api/model", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ provider: "ollama", name, probe: false }),
+        });
+        document.getElementById("scanOut").textContent = "Downloaded and pinned " + name;
+        await loadModels();
+        add("bot", "Downloaded " + name + " with Ollama and set it as the active model.");
+      } catch (e) {
+        document.getElementById("scanOut").textContent = String(e);
+      }
+    };
+
     document.getElementById("installLlmfit").onclick = async () => {
       document.getElementById("llmfitOut").textContent = "installing llmfit…";
       try {
         const r = await j("/api/install/llmfit", { method: "POST" });
         renderLocal(await j("/api/scan"));
-        add("bot", r.llmfit ? "llmfit is installed." : "llmfit install finished. Check the sidebar.");
+        add("bot", r.llmfit ? "llmfit is installed. Loading models that fit this PC…" : "llmfit install finished. Check the sidebar.");
+        await loadModels();
       } catch (e) {
         document.getElementById("llmfitOut").className = "status bad";
         document.getElementById("llmfitOut").textContent = String(e);
@@ -204,11 +331,11 @@
     };
 
     document.getElementById("scan").onclick = async () => {
-      document.getElementById("scanOut").textContent = "scanning…";
+      document.getElementById("scanOut").textContent = "picking a local model that fits…";
       try {
-        renderLocal(await j("/api/scan"));
-        const r = await j("/api/scan/run", { method: "POST" });
+        const r = await j("/api/scan/run", { method: "POST", headers: {"Content-Type":"application/json"}, body: "{}" });
         document.getElementById("scanOut").textContent = r.english || r.reason || (r.ok ? "local pin ok" : "staying on cloud");
+        await loadModels();
       } catch (e) {
         document.getElementById("scanOut").textContent = String(e);
       }

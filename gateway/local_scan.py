@@ -6,7 +6,8 @@ import subprocess
 from typing import Any
 
 from gateway.bins import which_tool
-from gateway.probe.catalog import nominate, system_specs
+from gateway.llmfit_bridge import hardware_fit_catalog
+from gateway.probe.ladder import fail_forward
 
 LLMFIT_PYPI = "https://pypi.org/project/llmfit/"
 OLLAMA_DOWNLOAD = "https://ollama.com/download"
@@ -31,12 +32,21 @@ def scan(*, quick: bool = False) -> dict[str, Any]:
         "ollama_install": OLLAMA_DOWNLOAD,
         "llmfit_hint": None if llm else "uv tool install llmfit",
         "system": None,
+        "available_ram_gb": 0,
+        "installed": [],
+        "suggested": [],
+        "recommended": [],
         "nominees": [],
     }
     if quick:
         return info
-    info["system"] = system_specs()
-    info["nominees"] = nominate(limit=8) if llm else []
+    catalog = hardware_fit_catalog()
+    info.update(catalog)
+    info["nominees"] = [
+        n
+        for n in (catalog.get("installed") or []) + (catalog.get("suggested") or [])
+        if n.get("fit_level") not in {"wont_fit"}
+    ]
     return info
 
 
@@ -67,35 +77,40 @@ def install_llmfit() -> dict[str, Any]:
     }
 
 
-def try_local(api_key: str | None = None) -> dict[str, Any]:
-    info = scan()
+def try_local(api_key: str | None = None, name: str | None = None) -> dict[str, Any]:
+    info = scan(quick=False)
     if not info["ollama"]:
         return {"ok": False, "reason": "ollama_missing", "scan": info, "english": "Download Ollama first."}
-    if not info["llmfit"]:
+    installed = info.get("installed") or []
+    suggested = [s for s in (info.get("suggested") or []) if s.get("fit_level") in {"perfect", "good", "marginal"}]
+    pick = name
+    if not pick and installed:
+        ranked = sorted(
+            installed,
+            key=lambda r: {"perfect": 0, "good": 1, "marginal": 2, "tight": 3}.get(str(r.get("fit_level")), 9),
+        )
+        pick = ranked[0]["name"]
+    if not pick and suggested:
+        pick = suggested[0]["name"]
+    if not pick:
         return {
             "ok": False,
-            "reason": "llmfit_missing",
+            "reason": "no_local_model",
             "scan": info,
-            "english": "Install llmfit (sidebar button or: uv tool install llmfit).",
+            "english": "No local model that fits. Pick one in the sidebar and pull it with Ollama.",
         }
-    nominees = [
-        ("ollama", n["ollama_name"] or n["name"])
-        for n in info["nominees"]
-        if n.get("ollama_name") or n.get("name")
-    ]
-    if not nominees:
-        nominees = [("ollama", "qwen3:4b")]
-    first = nominees[0]
-    alts = nominees[1:4] + [("openrouter", "openai/gpt-4o-mini")]
-    from gateway.probe.ladder import fail_forward
-
+    alts = [("ollama", m["name"]) for m in installed if m.get("name") != pick][:3]
+    alts.append(("openrouter", "openai/gpt-4o-mini"))
     result = fail_forward(
-        provider=first[0],
-        name=first[1],
+        provider="ollama",
+        name=pick,
         alternate_tags=alts,
         api_key=api_key,
         mode="fast",
         n=3,
     )
     result["scan"] = info
+    result["picked"] = pick
+    if result.get("ok"):
+        result["english"] = f"Pinned local model {pick}."
     return result

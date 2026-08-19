@@ -13,8 +13,8 @@ def test_ui_has_no_pda_and_shows_llmfit() -> None:
     assert "PDA" not in html
     assert "PDA" not in skill
     assert "llmfit" in html
-    assert "https://pypi.org/project/llmfit/" in html
-    assert "https://ollama.com/download" in html
+    assert "modelPick" in html
+    assert "/api/models" in html
     assert "/api/download/file" in html
     assert "/api/export/chat" in html
 

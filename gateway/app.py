@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from gateway.db import Store
 from gateway.evals import score_run
 from gateway.later import later_status
+from gateway.llmfit_bridge import ollama_pull
 from gateway.local_scan import install_llmfit, scan as local_scan, try_local
 from gateway.packs.files import fs_list, fs_read
 from gateway.packs.rag import HybridIndex, ingest_workspace
@@ -44,6 +45,20 @@ class ProbeIn(BaseModel):
     provider: str = "openrouter"
     name: str = "openai/gpt-4o-mini"
     mode: str = "fast"
+
+
+class PinIn(BaseModel):
+    provider: str = "ollama"
+    name: str
+    probe: bool = False
+
+
+class PullIn(BaseModel):
+    name: str
+
+
+class ScanRunIn(BaseModel):
+    name: str | None = None
 
 
 def default_spec(workspace: Path, store: Store) -> AgentSpec:
@@ -100,6 +115,7 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
             "ok": True,
             "workspace": str(workspace),
             "ingested": index.ready(),
+            "model": default_spec(workspace, store).model_pin.model_dump(),
         }
 
     @app.get("/api/later")
@@ -151,6 +167,54 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
     @app.get("/api/scan")
     def scan(quick: bool = True):
         return local_scan(quick=quick)
+
+    @app.get("/api/models")
+    def models():
+        data = local_scan(quick=False)
+        data["current"] = default_spec(workspace, store).model_pin.model_dump()
+        return data
+
+    @app.post("/api/model")
+    def pin_model(body: PinIn):
+        if body.provider not in {"openrouter", "ollama"}:
+            raise HTTPException(400, "provider must be openrouter or ollama")
+        if not body.name.strip():
+            raise HTTPException(400, "name required")
+        key = store.get_setting("openrouter_key") or os.environ.get("OPENROUTER_API_KEY")
+        if body.probe:
+            card = run_probe(provider=body.provider, name=body.name.strip(), mode="fast", n=3, api_key=key)
+            store.set_setting("card", json.dumps(card))
+            store.set_setting("model_pin", json.dumps(card["model_pin"]))
+            store.save_card(card)
+            return {
+                "ok": card.get("verdict") == "agent",
+                "probed": True,
+                "model_pin": card.get("model_pin"),
+                "verdict": card.get("verdict"),
+                "cause": card.get("cause"),
+            }
+        pin = ModelPin(provider=body.provider, name=body.name.strip())
+        pin.digest = f"{pin.provider}:{pin.name}"
+        store.set_setting("model_pin", json.dumps(pin.model_dump()))
+        store.set_setting(
+            "card",
+            json.dumps(
+                {
+                    "verdict": "agent",
+                    "cause": None,
+                    "model_pin": pin.model_dump(),
+                    "measured": {"per_step_success_lo95": 0.5, "max_tools": 3, "max_steps": 3},
+                }
+            ),
+        )
+        return {"ok": True, "probed": False, "model_pin": pin.model_dump()}
+
+    @app.post("/api/ollama/pull")
+    def pull_ollama(body: PullIn):
+        result = ollama_pull(body.name.strip())
+        if not result.get("ok"):
+            raise HTTPException(status_code=500, detail=result)
+        return result
 
     @app.post("/api/install/llmfit")
     def install_local_llmfit():
@@ -208,9 +272,10 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
         )
 
     @app.post("/api/scan/run")
-    def scan_run():
+    def scan_run(body: ScanRunIn | None = None):
         key = store.get_setting("openrouter_key") or os.environ.get("OPENROUTER_API_KEY")
-        result = try_local(api_key=key)
+        name = body.name.strip() if body and body.name else None
+        result = try_local(api_key=key, name=name)
         if result.get("ok") and result.get("card"):
             card = result["card"]
             store.set_setting("card", json.dumps(card))
@@ -219,6 +284,7 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
             "ok": result.get("ok"),
             "reason": result.get("reason"),
             "english": result.get("english"),
+            "picked": result.get("picked"),
             "card": {k: result.get("card", {}).get(k) for k in ("model_pin", "measured", "verdict", "cause")},
         }
 
@@ -231,7 +297,9 @@ def make_app(workspace: Path, store: Store) -> FastAPI:
         card_raw = store.get_setting("card")
         if card_raw:
             card = json.loads(card_raw)
-            if card.get("verdict") == "chat_only":
+            pinned = spec.model_pin.name
+            same = (card.get("model_pin") or {}).get("name") == pinned
+            if same and card.get("verdict") == "chat_only":
                 raise HTTPException(409, f"probe verdict chat_only: {card.get('cause')}")
         session_id = body.session_id or "default"
         history = sanitize_messages(store.load_session(session_id))
