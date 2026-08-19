@@ -35,8 +35,8 @@ def main(argv: list[str] | None = None) -> int:
             "  uv tool install git+https://github.com/vinothhacks/agentforge.git\n"
             "  agentforge --dir path\\to\\pdfs\n\n"
             "These fail on purpose:\n"
-            "  uv run agentforge   — only works after clone + cd into this repo\n"
-            "  uvx agentforge      — PyPI agentforge is a different package with no CLI"
+            "  uv run agentforge   - only works after clone + cd into this repo\n"
+            "  uvx agentforge      - PyPI agentforge is a different package with no CLI"
         ),
     )
     p.add_argument("--dir", default=".", help="Workspace folder (Claude Code pattern).")
