@@ -10,21 +10,13 @@ from typing import Any
 
 import httpx
 
+from gateway.catalog import merge_catalog
 from gateway.bins import which_tool
 
 SKIP_CATEGORIES = {"embedding", "embeddings", "tts", "audio", "rerank", "reranker"}
 MIN_PARAMS_B = 0.5
 
-OLLAMA_SUGGESTIONS = [
-    {"name": "qwen3:4b", "approx_gb": 2.5, "notes": "Tool-use, strong default on 8GB+ RAM"},
-    {"name": "qwen2.5:3b", "approx_gb": 2.0, "notes": "Small instruct"},
-    {"name": "llama3.2:3b", "approx_gb": 2.0, "notes": "Small instruct"},
-    {"name": "gemma3:4b", "approx_gb": 3.3, "notes": "Instruct"},
-    {"name": "phi4-mini", "approx_gb": 2.5, "notes": "Small Microsoft instruct"},
-    {"name": "mistral:7b", "approx_gb": 4.4, "notes": "7B instruct"},
-    {"name": "qwen2.5:7b", "approx_gb": 4.7, "notes": "7B instruct"},
-    {"name": "llama3.1:8b", "approx_gb": 4.9, "notes": "8B instruct"},
-]
+OLLAMA_SUGGESTIONS: list[dict[str, Any]] = []  # replaced by merge_catalog / ollama_name rows
 
 
 def parse_json_blob(text: str) -> dict[str, Any] | None:
@@ -236,41 +228,33 @@ def hardware_fit_catalog() -> dict[str, Any]:
     now = time.time()
     if _CACHE["data"] and now - float(_CACHE["t"]) < 45:
         return _CACHE["data"]
-    system = system_specs()
-    ram = available_ram_gb(system)
-    installed = ollama_installed_models()
-    names = {str(m["name"]) for m in installed}
-    for row in installed:
-        row["provider"] = "ollama"
-        row["installed"] = True
-        row["fit_level"] = fit_label(float(row.get("size_gb") or 0), ram)
-        row["source"] = "installed"
-
+    merged = merge_catalog(live=True)
+    ram = available_ram_gb(merged.get("system"))
+    installed: list[dict[str, Any]] = []
     suggested: list[dict[str, Any]] = []
-    for item in OLLAMA_SUGGESTIONS:
-        if item["name"] in names:
-            continue
-        suggested.append(
-            {
-                "name": item["name"],
-                "provider": "ollama",
-                "installed": False,
-                "size_gb": item["approx_gb"],
-                "fit_level": fit_label(item["approx_gb"], ram),
-                "notes": item["notes"],
-                "source": "library",
-            }
-        )
-
-    recommended = recommend_chat(limit=12)
-    for rec in recommended:
-        rec["source"] = "llmfit"
-        rec["provider"] = "ollama" if rec.get("ollama_name") else rec.get("provider")
-        rec["pin_name"] = rec.get("ollama_name") or rec.get("name")
-        rec["can_pin_ollama"] = bool(rec.get("ollama_name"))
-
+    recommended: list[dict[str, Any]] = []
+    for row in merged.get("rows") or []:
+        item = {
+            "name": row.get("ollama_name") or row.get("name"),
+            "provider": "ollama" if row.get("ollama_name") else row.get("source"),
+            "installed": row.get("state") == "INSTALLED",
+            "size_gb": row.get("size"),
+            "fit_level": str(row.get("FITS") or "unknown").lower(),
+            "notes": row.get("reason"),
+            "source": row.get("source"),
+            "ollama_name": row.get("ollama_name"),
+            "can_pin_ollama": bool(row.get("ollama_name")) and row.get("state") in {"INSTALLED", "PULLABLE"},
+            "pin_name": row.get("ollama_name") or row.get("name"),
+            "state": row.get("state"),
+        }
+        if row.get("state") == "INSTALLED" and row.get("source") == "ollama":
+            installed.append(item)
+        elif row.get("state") == "PULLABLE":
+            suggested.append(item)
+        if row.get("source") == "llmfit":
+            recommended.append(item)
     data = {
-        "system": system,
+        "system": merged.get("system"),
         "available_ram_gb": ram,
         "installed": installed,
         "suggested": suggested,

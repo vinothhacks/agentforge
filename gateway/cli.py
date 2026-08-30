@@ -128,7 +128,8 @@ def main(argv: list[str] | None = None) -> int:
 
     from gateway.app import make_app
 
-    app = make_app(workspace, store)
+    # The port has to be settled before the app is built: CORS now names the
+    # concrete origin the UI will be served from instead of allowing "*".
     port = args.port
     try:
         chosen = first_free_port(args.host, args.port)
@@ -138,6 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     if chosen != args.port:
         print(f"port {args.port} is in use — using {chosen}", file=sys.stderr)
         port = chosen
+    app = make_app(workspace, store, port=port)
     url = f"http://{args.host}:{port}"
     print(f"AgentForge  workspace={workspace}")
     print(f"Open {url}  - paste an OpenRouter key, or pick a local model that fits this PC.")

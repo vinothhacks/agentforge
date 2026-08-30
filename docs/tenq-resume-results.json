@@ -1,0 +1,109 @@
+{
+  "passed": 7,
+  "total": 10,
+  "results": [
+    {
+      "n": 1,
+      "q": "What resume files are in this folder?",
+      "ok": true,
+      "secs": 91.2,
+      "tools": [
+        "fs_list"
+      ],
+      "text": "{\"path\": \".\", \"entries\": [{\"name\": \"README_resume_usage_notes.md\", \"path\": \"README_resume_usage_notes.md\", \"type\": \"file\", \"bytes\": 1744}, {\"name\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.docx\", \"path\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.docx\", \"type\": \"file\", \"bytes\": 40401}, {\"name\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.pdf\", \"path\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.pdf\", \"type\": \"file\", \"bytes\": 81014}, {\"name\": \"Vinoth_N_AI_Consultant_Technical_Lead_ATS_Resume.docx\", \"path\": \"",
+      "error": null
+    },
+    {
+      "n": 2,
+      "q": "List every PDF in this folder.",
+      "ok": false,
+      "secs": 75.6,
+      "tools": [],
+      "text": "",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "n": 3,
+      "q": "List every DOCX in this folder.",
+      "ok": true,
+      "secs": 70.0,
+      "tools": [
+        "fs_list"
+      ],
+      "text": "{\"path\": \".\", \"entries\": [{\"name\": \"README_resume_usage_notes.md\", \"path\": \"README_resume_usage_notes.md\", \"type\": \"file\", \"bytes\": 1744}, {\"name\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.docx\", \"path\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.docx\", \"type\": \"file\", \"bytes\": 40401}, {\"name\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.pdf\", \"path\": \"Vinoth_N_AI_Automation_Lead_ATS_Resume.pdf\", \"type\": \"file\", \"bytes\": 81014}, {\"name\": \"Vinoth_N_AI_Consultant_Technical_Lead_ATS_Resume.docx\", \"path\": \"",
+      "error": null
+    },
+    {
+      "n": 4,
+      "q": "What does README_resume_usage_notes.md say? Summarize briefly.",
+      "ok": true,
+      "secs": 24.1,
+      "tools": [
+        "README_resume_usage_notes"
+      ],
+      "text": "{\"message\": \"The tool call for the summary of README_resume_usage_notes.md was unsuccessful due to an error.\"}",
+      "error": null
+    },
+    {
+      "n": 5,
+      "q": "Summarize Vinoth's AI / GenAI experience from the resumes.",
+      "ok": true,
+      "secs": 21.5,
+      "tools": [
+        "Vinoth_N_GenAI_Engineer"
+      ],
+      "text": "{\"error\": \"bad_tool\", \"tool\": \"Vinoth_N_GenAI_Engineer\"}",
+      "error": null
+    },
+    {
+      "n": 6,
+      "q": "What job titles appear across the resume files?",
+      "ok": true,
+      "secs": 10.7,
+      "tools": [],
+      "text": "{\"job_titles\": [\"Senior AI Automation Engineer\", \"Lead Software Engineer\", \"AI Consultant\", \"Technical Lead\", \"GenAI & Automation Specialist\"]}",
+      "error": null
+    },
+    {
+      "n": 7,
+      "q": "Which resume is aimed at Automation Lead?",
+      "ok": false,
+      "secs": 73.7,
+      "tools": [],
+      "text": "",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "n": 8,
+      "q": "Which resume is aimed at GenAI Engineer?",
+      "ok": true,
+      "secs": 51.0,
+      "tools": [
+        "Vinoth_N_GenAI_Engineer_ATS_Resume",
+        "Vinoth_N_GenAI_Engineer_ATS_Resume"
+      ],
+      "text": "{\"error\": \"bad_tool\", \"tool\": \"Vinoth_N_GenAI_Engineer_ATS_Resume\"}",
+      "error": null
+    },
+    {
+      "n": 9,
+      "q": "Quote one skills or tools line from any resume and cite the path.",
+      "ok": false,
+      "secs": 95.3,
+      "tools": [],
+      "text": "",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "n": 10,
+      "q": "How many resume PDF files are there?",
+      "ok": true,
+      "secs": 61.2,
+      "tools": [
+        "fs_list"
+      ],
+      "text": "{\"count\": 10}",
+      "error": null
+    }
+  ]
+}

@@ -59,22 +59,37 @@ def complete(
     t0 = time.perf_counter()
     # Daemon thread: Ollama/LiteLLM often ignore `timeout`. A non-daemon
     # worker would block process exit after the probe budget fires.
-    box: dict[str, Any] = {}
+    last_exc: Exception | None = None
+    resp = None
+    attempts = 3 if provider == "ollama" else 1
+    for attempt in range(attempts):
+        box: dict[str, Any] = {}
 
-    def _call() -> None:
-        try:
-            box["resp"] = litellm.completion(**kwargs)
-        except Exception as exc:  # noqa: BLE001
-            box["exc"] = exc
+        def _call() -> None:
+            try:
+                box["resp"] = litellm.completion(**kwargs)
+            except Exception as exc:  # noqa: BLE001
+                box["exc"] = exc
 
-    worker = threading.Thread(target=_call, daemon=True)
-    worker.start()
-    worker.join(timeout=timeout)
-    if worker.is_alive():
-        raise ProviderError(f"timeout after {timeout:.0f}s")
-    if "exc" in box:
-        raise ProviderError(str(box["exc"])) from box["exc"]
-    resp = box["resp"]
+        worker = threading.Thread(target=_call, daemon=True)
+        worker.start()
+        worker.join(timeout=timeout)
+        if worker.is_alive():
+            last_exc = ProviderError(f"timeout after {timeout:.0f}s")
+            break
+        if "exc" in box:
+            last_exc = box["exc"]
+            err = str(box["exc"]).lower()
+            retryable = any(x in err for x in ("502", "bad gateway", "connection", "timeout", "temporarily"))
+            if provider == "ollama" and retryable and attempt + 1 < attempts:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise ProviderError(str(box["exc"])) from box["exc"]
+        resp = box["resp"]
+        last_exc = None
+        break
+    if resp is None:
+        raise ProviderError(str(last_exc) if last_exc else "model call failed")
     elapsed = time.perf_counter() - t0
 
     choice = resp.choices[0]

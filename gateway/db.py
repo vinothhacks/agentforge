@@ -1,4 +1,10 @@
-"""SQLite app DB: sessions, traces, cards, encrypted-enough key store, FTS5 lives in rag pack."""
+"""SQLite app DB: sessions, traces, cards, settings. FTS5 lives in the rag pack.
+
+The OpenRouter key is stored here in plaintext -- there is no encryption and
+this docstring used to claim otherwise. The file therefore never leaves the
+machine: it lives under .agentforge, which the read tools and the download
+endpoint both refuse (see gateway/paths.py::BLOCKED_PARTS).
+"""
 
 from __future__ import annotations
 
@@ -62,6 +68,10 @@ class Store:
             "INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             (key, value),
         )
+        self.conn.commit()
+
+    def delete_setting(self, key: str) -> None:
+        self.conn.execute("DELETE FROM settings WHERE key=?", (key,))
         self.conn.commit()
 
     def save_session(self, session_id: str, workspace: str, messages: list[dict[str, Any]]) -> None:

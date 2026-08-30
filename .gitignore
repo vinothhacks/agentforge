@@ -17,4 +17,11 @@ fixtures/advanced/.agentforge/
 fixtures/advanced/LIVE_CHAT.json
 fixtures/advanced/QUALITY.json
 .DS_Store
-noded_modules/
+node_modules/
+
+# Generated run artifacts. Reproduce with:
+#   uv run python scripts/benchmark_pdf_extract.py
+BENCHMARK.json
+BENCHMARK.md
+p1_disagreement.json
+p1_disagreement.md

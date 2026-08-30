@@ -28,43 +28,114 @@
     header h1 { font-size: 16px; margin: 0; font-weight: 600; }
     header .sub { color: var(--muted); font-size: 12px; }
     .meter { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
-    main { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 54px); }
-    aside { border-right: 1px solid var(--line); padding: 16px; background: #12181f; overflow: auto; }
-    aside label { display: block; font-size: 11px; color: var(--muted); margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
-    input, textarea, button {
+    main { display: grid; grid-template-columns: 400px 1fr; height: calc(100vh - 54px); overflow: hidden; }
+    aside { border-right: 1px solid var(--line); padding: 16px; background: #12181f; overflow: auto; min-height: 0; }
+    aside::-webkit-scrollbar { width: 8px; }
+    aside::-webkit-scrollbar-thumb { background: #3a4654; border-radius: 8px; }
+    aside label { display: block; font-size: 11px; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+    input, textarea, button, select {
       width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
       background: var(--bg); color: var(--ink); font: inherit;
     }
     button { cursor: pointer; background: var(--accent); border: 0; color: #062033; font-weight: 600; margin-top: 8px; }
     button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
     a.btn {
       display: block; text-align: center; text-decoration: none; padding: 8px 10px;
       border-radius: 6px; border: 1px solid var(--line); color: var(--ink); margin-top: 8px; font-weight: 600;
     }
-    select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
-      background: var(--bg); color: var(--ink); font: inherit; margin-top: 6px; }
-    .hw { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
-    .models { list-style: none; padding: 0; margin: 8px 0 0; max-height: 220px; overflow: auto; }
-    .models li { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
-    .models button { width: auto; margin: 4px 0 0; padding: 4px 8px; font-size: 12px; }
-    .fit { text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+    select { margin-top: 0; }
+    .hw { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
     .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
     .ok { color: var(--ok); }
     .bad { color: var(--bad); }
-    .status { font-size: 13px; margin-top: 6px; }
+    .status { font-size: 13px; margin-top: 4px; }
     .files { list-style: none; padding: 0; margin: 8px 0 0; }
     .files li { display: flex; gap: 8px; align-items: center; font-size: 12px; margin: 0 0 6px; }
     .files span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
     .files a { color: var(--accent); text-decoration: none; flex: none; }
-    .chat { display: flex; flex-direction: column; height: calc(100vh - 54px); }
-    .log { flex: 1; overflow: auto; padding: 20px; }
+    .chat { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .log { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; }
     .bubble { max-width: 720px; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; }
     .user { background: #243044; margin-left: auto; }
     .bot { background: var(--panel); border: 1px solid var(--line); }
     .trace { font-size: 12px; color: var(--muted); margin: -8px 0 12px; }
-    form.composer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
-    form.composer textarea { flex: 1; min-height: 44px; resize: vertical; }
+    form.composer {
+      display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line);
+      flex-shrink: 0; align-items: flex-end; background: var(--panel);
+    }
+    form.composer textarea {
+      flex: 1; min-height: 44px; max-height: 40vh; resize: vertical;
+      overflow-y: auto; field-sizing: content;
+    }
     form.composer button { width: auto; margin: 0; padding: 8px 16px; }
+
+    .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin: 8px 0; }
+    .tabs button { margin: 0; padding: 7px 8px; font-size: 12px; }
+    .tabs button.on { background: var(--accent); color: #062033; border: 0; }
+    .filters { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; margin: 8px 0; }
+    .filters label { margin: 0; text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+    aside input[type=checkbox] { width: auto; margin: 0; }
+    .cat-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 48vh; overflow: auto; padding-right: 4px; }
+    .cat-list::-webkit-scrollbar { width: 8px; }
+    .cat-list::-webkit-scrollbar-thumb { background: #3a4654; border-radius: 8px; }
+    .card {
+      border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel);
+    }
+    .card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .card-name { font-weight: 600; font-size: 13px; word-break: break-word; }
+    .badge {
+      flex: none; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+      padding: 2px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+    }
+    .badge.ready { color: var(--ok); border-color: #2e5a44; }
+    .badge.get { color: var(--accent); border-color: #2a4d6e; }
+    .badge.off { color: var(--warn); border-color: #5a4a2e; }
+    .meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .est { color: var(--muted); }
+    .card-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .card-actions button { width: auto; flex: 1; margin: 0; padding: 7px 10px; font-size: 13px; }
+    .empty { font-size: 13px; color: var(--muted); padding: 12px 4px; }
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(4, 8, 12, .72);
+      z-index: 40; align-items: center; justify-content: center; padding: 24px;
+    }
+    .overlay.on { display: flex; }
+    .modal {
+      width: min(860px, 100%); max-height: 86vh; display: flex; flex-direction: column;
+      background: #12181f; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    }
+    .modal header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+    .modal h2 { margin: 0; font-size: 16px; }
+    .modal .toolbar { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 8px; padding: 0 16px 8px; }
+    .modal .toolbar2 { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto auto; gap: 8px; padding: 0 16px 10px; align-items: end; }
+    .filt label { margin: 0 0 4px; font-size: 10px; }
+    .filt input, .filt select, .filt button { margin: 0; }
+    .modal .toolbar button, .modal .toolbar2 button, .modal .toolbar input, .modal .toolbar2 input, .modal .toolbar2 select { margin: 0; }
+    .modal .list { overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .modal .list::-webkit-scrollbar { width: 8px; }
+    .modal .list::-webkit-scrollbar-thumb { background: #3a4654; border-radius: 8px; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 0; }
+    .btn-row button { margin: 0; font-size: 12px; padding: 7px 8px; }
+    .perm { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; }
+    .perm select { flex: 1; margin: 0; }
+    .perm-state { font-size: 11px; padding: 2px 7px; border-radius: 10px; border: 1px solid #3a4654; }
+    .perm-state.off { color: #8fa0b3; }
+    .perm-state.ask { color: #e0b341; border-color: #6b5a20; }
+    .perm-state.on { color: #ff9f6b; border-color: #7a4126; }
+    .diff { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px;
+            white-space: pre; overflow: auto; max-height: 46vh; padding: 12px 16px; margin: 0;
+            line-height: 1.45; }
+    .diff .add { color: #7ee08a; }
+    .diff .del { color: #ff8b8b; }
+    .diff .hunk { color: #6fa8ff; }
+    .diff .meta { color: #8fa0b3; }
+    .confirm-bar { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px;
+                   border-top: 1px solid #26313d; }
+    .confirm-bar button { margin: 0; }
+    .files li .tag { font-size: 10px; color: #8fa0b3; border: 1px solid #33404e;
+                     border-radius: 8px; padding: 1px 5px; margin-left: 6px; }
   </style>
 </head>
 <body>
@@ -77,31 +148,43 @@
   </header>
   <main>
     <aside>
-      <label>OpenRouter key</label>
-      <input id="key" type="password" placeholder="sk-or-…" />
+      <label>OpenRouter key (optional)</label>
+      <input id="key" type="password" placeholder="sk-or-… only if using cloud" />
       <button id="saveKey">Save key</button>
       <label>Fast probe (2-min path)</label>
       <button class="ghost" id="probe">Run fast probe</button>
       <div id="probeOut" class="sub"></div>
 
-      <label>llmfit</label>
-      <div id="llmfitOut" class="status">checking llmfit…</div>
-      <button class="ghost" id="installLlmfit">Install llmfit</button>
-      <a class="btn" id="llmfitPypi" href="https://pypi.org/project/llmfit/" target="_blank" rel="noreferrer">Download llmfit (PyPI)</a>
+      <label>Local models</label>
+      <div id="currentModel" class="status">loading catalog…</div>
       <div id="hw" class="hw"></div>
+      <div class="btn-row">
+        <button id="browseLlmfit">Browse llmfit models</button>
+        <button class="ghost" id="browseOllama">Browse Ollama models</button>
+      </div>
+      <div class="tabs" id="catTabs">
+        <button type="button" class="ghost on" data-tab="ready">Ready</button>
+        <button type="button" class="ghost" data-tab="download">Download</button>
+        <button type="button" class="ghost" data-tab="all">All</button>
+      </div>
+      <div class="filters">
+        <input id="catFilter" placeholder="filter name…" />
+        <label><input type="checkbox" id="toolsOnly" /> tools only</label>
+      </div>
+      <div id="scanOut" class="status"></div>
+      <div class="cat-list" id="catList"></div>
+      <p class="note">Local chat needs no OpenRouter key. Pick a Ready model, or use <strong>Browse Ollama</strong> / <strong>Browse llmfit</strong> to download one that fits this PC.</p>
 
-      <label>Model that fits this PC</label>
-      <div id="currentModel" class="status">loading models…</div>
-      <select id="modelPick"></select>
-      <button id="useModel">Use selected model</button>
-      <button class="ghost" id="pullModel">Download selected with Ollama</button>
-      <button class="ghost" id="scan">Auto-pick best installed local model</button>
-      <div id="scanOut" class="sub"></div>
-      <ul class="models" id="modelList"></ul>
-
-      <label>Ollama</label>
-      <div id="ollamaOut" class="status">checking Ollama…</div>
-      <a class="btn primary" href="https://ollama.com/download" target="_blank" rel="noreferrer">Download Ollama</a>
+      <label>Allow file edits</label>
+      <div class="perm">
+        <select id="permSelect">
+          <option value="deny">Off - read only</option>
+          <option value="ask">Ask - show a diff first</option>
+          <option value="allow">Allow - write immediately</option>
+        </select>
+        <span class="perm-state off" id="permState">off</span>
+      </div>
+      <p class="note" id="permNote">Writes stay inside this folder, cover .md .txt .json .csv .yaml .yml only, and are backed up to .agentforge/backups before any replacement. PDF and DOCX are read-only.</p>
 
       <label>Workspace files</label>
       <ul class="files" id="fileList"></ul>
@@ -116,10 +199,113 @@
       </form>
     </section>
   </main>
+  <div class="overlay" id="llmfitModal" role="dialog" aria-label="llmfit models">
+    <div class="modal">
+      <header>
+        <h2>Browse llmfit models</h2>
+        <button class="ghost close-x" id="closeLlmfit" type="button">Close</button>
+      </header>
+      <div class="toolbar">
+        <div class="filt">
+          <label>Search</label>
+          <input id="modalFilter" placeholder="name or provider…" />
+        </div>
+        <div class="filt">
+          <label>Provider</label>
+          <select id="modalProvider"><option value="">All</option></select>
+        </div>
+        <div class="filt">
+          <label>Use case</label>
+          <select id="modalUse"><option value="">All</option></select>
+        </div>
+      </div>
+      <div class="toolbar2">
+        <div class="filt">
+          <label>Capabilities</label>
+          <select id="modalCaps"><option value="">All</option></select>
+        </div>
+        <div class="filt">
+          <label>Fit</label>
+          <select id="modalFit">
+            <option value="">All</option>
+            <option value="perfect">perfect</option>
+            <option value="good">good</option>
+            <option value="marginal">marginal</option>
+            <option value="tight">tight</option>
+            <option value="wont_fit">wont_fit</option>
+          </select>
+        </div>
+        <div class="filt">
+          <label>Sort</label>
+          <select id="modalSort">
+            <option value="score">Score</option>
+            <option value="tps">Speed (est.)</option>
+            <option value="params">Params</option>
+            <option value="mem">Memory</option>
+            <option value="ctx">Context</option>
+            <option value="date">Date</option>
+            <option value="provider">Provider</option>
+          </select>
+        </div>
+        <label class="filt" style="display:flex; flex-direction:row; align-items:center; gap:6px; text-transform:none;">
+          <input type="checkbox" id="modalTools" /> tools
+        </label>
+        <button class="ghost" id="modalReload" type="button">Refresh</button>
+      </div>
+      <div id="modalStatus" class="note" style="padding: 0 16px 8px; margin:0;"></div>
+      <div class="list" id="modalList"></div>
+      <div style="padding: 0 16px 14px;">
+        <button class="ghost" id="modalMore" type="button" style="display:none; margin:0;">Load more</button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="diffModal" role="dialog" aria-label="Confirm file change">
+    <div class="modal">
+      <header>
+        <h2 id="diffTitle">Confirm change</h2>
+        <button class="ghost close-x" id="diffClose" type="button">Close</button>
+      </header>
+      <div id="diffMeta" class="note" style="padding: 0 16px 8px; margin:0;"></div>
+      <pre class="diff" id="diffBody"></pre>
+      <div class="confirm-bar">
+        <button class="ghost" id="diffReject" type="button">Discard</button>
+        <button id="diffApprove" type="button">Apply change</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="ollamaModal" role="dialog" aria-label="Ollama models">
+    <div class="modal">
+      <header>
+        <h2>Browse Ollama models</h2>
+        <button class="ghost close-x" id="closeOllama" type="button">Close</button>
+      </header>
+      <div class="toolbar" style="grid-template-columns: 1fr auto;">
+        <div class="filt">
+          <label>Filter</label>
+          <input id="ollamaFilter" placeholder="model name…" />
+        </div>
+        <button class="ghost" id="ollamaReload" type="button" style="align-self:end;">Refresh</button>
+      </div>
+      <div class="toolbar" style="grid-template-columns: 1fr auto; padding-top: 0;">
+        <div class="filt">
+          <label>Pull tag</label>
+          <input id="ollamaPullTag" placeholder="e.g. tinyllama" />
+        </div>
+        <button id="ollamaPullBtn" type="button" style="align-self:end; margin:0;">Pull & use</button>
+      </div>
+      <div id="ollamaStatus" class="note" style="padding: 0 16px 8px; margin:0;"></div>
+      <div class="list" id="ollamaList"></div>
+    </div>
+  </div>
   <script>
     const log = document.getElementById("log");
     const meter = document.getElementById("meter");
     let session = "default";
+    let catalogRows = [];
+    let lastPullJob = null;
+    let catTab = "ready";
+    let currentPin = "";
 
     function add(role, text, extra) {
       const d = document.createElement("div");
@@ -138,84 +324,471 @@
     async function j(url, opts) {
       const r = await fetch(url, opts);
       const data = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(data.detail || JSON.stringify(data));
+      if (!r.ok) {
+        const detail = data.detail;
+        const msg = typeof detail === "string" ? detail
+          : (detail && detail.message) || JSON.stringify(data) || r.statusText;
+        throw new Error(msg);
+      }
       return data;
     }
 
-    function renderLocal(s) {
-      const lf = document.getElementById("llmfitOut");
-      lf.className = "status " + (s.llmfit ? "ok" : "bad");
-      lf.textContent = s.llmfit
-        ? "llmfit is installed."
-        : "llmfit not found. Install it here or: " + (s.llmfit_install || "uv tool install llmfit");
-      if (s.llmfit_pypi) document.getElementById("llmfitPypi").href = s.llmfit_pypi;
-      const ol = document.getElementById("ollamaOut");
-      ol.className = "status " + (s.ollama ? "ok" : "bad");
-      ol.textContent = s.ollama ? "Ollama is installed." : "Ollama not found. Use Download Ollama above.";
-      const sys = s.system || {};
-      const ram = s.available_ram_gb || sys.available_ram_gb;
+    function renderHw(sys) {
+      const ram = sys && (sys.available_ram_gb || sys.total_ram_gb);
       const bits = [];
-      if (sys.cpu_name) bits.push(sys.cpu_name);
-      if (ram) bits.push(Number(ram).toFixed(1) + " GB free RAM");
-      if (sys.total_ram_gb) bits.push("of " + Number(sys.total_ram_gb).toFixed(1) + " GB");
-      if (sys.gpu_name && sys.gpu_name !== "Name") bits.push("GPU " + sys.gpu_name);
-      else if (sys.has_gpu) bits.push("GPU present, VRAM unknown (CPU fit used)");
+      if (sys && sys.cpu_name) bits.push(sys.cpu_name);
+      if (ram) bits.push(Number(sys.available_ram_gb || ram).toFixed(1) + " GB free RAM");
+      if (sys && sys.total_ram_gb) bits.push("of " + Number(sys.total_ram_gb).toFixed(1) + " GB");
       document.getElementById("hw").textContent = bits.join(" · ");
     }
 
-    function fillModels(s) {
-      const cur = s.current || {};
-      document.getElementById("currentModel").textContent =
-        "Using " + (cur.provider || "?") + " / " + (cur.name || "?");
-      const pick = document.getElementById("modelPick");
-      pick.innerHTML = "";
-      const opts = [];
-      opts.push({ value: "openrouter|openai/gpt-4o-mini", label: "Cloud · openai/gpt-4o-mini" });
-      (s.installed || []).forEach((m) => {
-        opts.push({
-          value: "ollama|" + m.name,
-          label: "Installed · " + m.name + " · " + (m.fit_level || "") + (m.size_gb ? " · " + m.size_gb + " GB" : ""),
-        });
-      });
-      (s.suggested || []).forEach((m) => {
-        opts.push({
-          value: "ollama|" + m.name,
-          label: "Fits PC · " + m.name + " · " + (m.fit_level || "") + " · pull " + (m.size_gb || "") + " GB",
-        });
-      });
-      opts.forEach((o) => {
-        const el = document.createElement("option");
-        el.value = o.value;
-        el.textContent = o.label;
-        pick.appendChild(el);
-      });
-      const want = (cur.provider || "openrouter") + "|" + (cur.name || "openai/gpt-4o-mini");
-      if ([...pick.options].some((o) => o.value === want)) pick.value = want;
+    function badgeFor(state) {
+      if (state === "INSTALLED") return { cls: "ready", text: "ready" };
+      if (state === "PULLABLE") return { cls: "get", text: "download" };
+      return { cls: "off", text: "can't run" };
+    }
 
-      const ul = document.getElementById("modelList");
-      ul.innerHTML = "";
-      function addRow(title, m, extra) {
-        const li = document.createElement("li");
-        li.innerHTML = "<strong>" + title + "</strong> <span class='fit'>" + (m.fit_level || "") + "</span><br/>" + extra;
-        ul.appendChild(li);
+    function metaLine(r) {
+      const bits = [];
+      if (r.params) bits.push(r.params);
+      if (r.size != null) bits.push(r.size + " GB");
+      if (r.FITS) bits.push("fits " + r.FITS);
+      if (r.supports_tools) bits.push("tools");
+      if (r.est_vram != null) bits.push("est. VRAM " + r.est_vram + " GB");
+      if (r.est_tok_s != null) bits.push("est. " + r.est_tok_s + " tok/s");
+      if (r.measured_tok_s != null) bits.push("measured " + r.measured_tok_s + " tok/s");
+      if (r.quant) bits.push(r.quant);
+      return bits.join(" · ");
+    }
+
+    function renderCatalog() {
+      const q = (document.getElementById("catFilter").value || "").toLowerCase();
+      const toolsOnly = document.getElementById("toolsOnly").checked;
+      const list = document.getElementById("catList");
+      list.innerHTML = "";
+      const rows = catalogRows.filter((r) => {
+        if (q && !(r.name || "").toLowerCase().includes(q) && !(r.ollama_name || "").toLowerCase().includes(q)) return false;
+        if (toolsOnly && !r.supports_tools) return false;
+        if (catTab === "ready" && r.state !== "INSTALLED") return false;
+        if (catTab === "download" && r.state !== "PULLABLE") return false;
+        return true;
+      });
+      if (!rows.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = catTab === "ready"
+          ? "No installed local models. Open Download to pull one, or use OpenRouter above."
+          : catTab === "download"
+            ? "Nothing to download. This llmfit build has no Ollama tags — only Ready models can run."
+            : "No models match.";
+        list.appendChild(empty);
+        return;
       }
-      (s.installed || []).forEach((m) => addRow(m.name, m, "installed · " + (m.size_gb || "?") + " GB"));
-      (s.suggested || []).slice(0, 6).forEach((m) => addRow(m.name, m, (m.notes || "library") + " · not pulled yet"));
-      (s.recommended || []).slice(0, 5).forEach((m) => {
-        addRow(
-          m.name,
-          m,
-          "llmfit " + (m.parameter_count || "") + " · RAM " + (m.memory_required_gb || "?") + " GB · " + (m.run_mode || "")
-        );
+      rows.forEach((r) => {
+        const canUse = r.state === "INSTALLED";
+        const canPull = r.state === "PULLABLE";
+        const blocked = r.state === "NO_RUNTIME" || r.state === "UNRESOLVABLE";
+        const card = document.createElement("div");
+        const pinName = r.ollama_name || r.name;
+        card.className = "card" + (pinName === currentPin ? " active" : "");
+        const badge = badgeFor(r.state);
+        const top = document.createElement("div");
+        top.className = "card-top";
+        const name = document.createElement("div");
+        name.className = "card-name";
+        name.textContent = r.ollama_name || r.name;
+        const b = document.createElement("span");
+        b.className = "badge " + badge.cls;
+        b.textContent = badge.text;
+        top.appendChild(name);
+        top.appendChild(b);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = metaLine(r);
+        if (r.est_vram != null || r.est_tok_s != null) meta.classList.add("est");
+        card.appendChild(top);
+        card.appendChild(meta);
+        if (r.reason && blocked) {
+          const why = document.createElement("div");
+          why.className = "meta";
+          why.textContent = r.reason;
+          card.appendChild(why);
+        }
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        if (canUse) {
+          const use = document.createElement("button");
+          use.textContent = pinName === currentPin ? "Using" : "Use in this folder";
+          if (pinName === currentPin) use.disabled = true;
+          use.onclick = (ev) => { ev.stopPropagation(); useLocal(r); };
+          actions.appendChild(use);
+        }
+        if (canPull) {
+          const pull = document.createElement("button");
+          pull.textContent = "Download & use";
+          pull.onclick = (ev) => { ev.stopPropagation(); pullRow(r); };
+          actions.appendChild(pull);
+          if (lastPullJob && lastPullJob.name === pinName) {
+            const cancel = document.createElement("button");
+            cancel.className = "ghost";
+            cancel.textContent = "Cancel";
+            cancel.onclick = (ev) => { ev.stopPropagation(); cancelPull(); };
+            actions.appendChild(cancel);
+          }
+        }
+        if (blocked) {
+          const no = document.createElement("button");
+          no.className = "ghost";
+          no.disabled = true;
+          no.textContent = "Can't run locally";
+          actions.appendChild(no);
+        }
+        card.appendChild(actions);
+        card.onclick = () => {
+          if (canUse) useLocal(r);
+          else if (canPull) pullRow(r);
+        };
+        list.appendChild(card);
       });
     }
 
-    async function loadModels() {
-      document.getElementById("currentModel").textContent = "scoring models against this PC…";
-      const s = await j("/api/models");
-      renderLocal(s);
-      fillModels(s);
+    async function loadCatalog() {
+      document.getElementById("currentModel").textContent = "loading catalog…";
+      const s = await j("/api/catalog?limit=80");
+      catalogRows = s.rows || [];
+      const cur = s.current || {};
+      currentPin = cur.provider === "ollama" ? (cur.name || "") : "";
+      document.getElementById("currentModel").textContent =
+        "Using " + (cur.provider || "?") + " / " + (cur.name || "?");
+      renderHw(s.system || {});
+      renderCatalog();
       return s;
+    }
+
+    async function useLocal(r) {
+      const name = r.ollama_name || r.name;
+      document.getElementById("scanOut").textContent = "switching to " + name + "…";
+      try {
+        await j("/api/model", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ provider: "ollama", name, probe: false }),
+        });
+        document.getElementById("scanOut").textContent = "Using " + name + " on this folder.";
+        add("bot", "Local model " + name + " is active. Ask about files in this folder.");
+        await loadCatalog();
+      } catch (e) {
+        document.getElementById("scanOut").textContent = String(e);
+      }
+    }
+
+    async function pullRow(r) {
+      document.getElementById("scanOut").textContent = "downloading " + (r.ollama_name || r.name) + "…";
+      const started = await j("/api/catalog/pull", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          name: r.ollama_name || r.name,
+          ollama_name: r.ollama_name,
+          gguf_sources: r.gguf_sources || [],
+        }),
+      });
+      lastPullJob = { id: started.job_id, name: r.ollama_name || r.name, row: r };
+      renderCatalog();
+      const tick = async () => {
+        const p = await j("/api/catalog/pull/" + started.job_id);
+        document.getElementById("scanOut").textContent = (p.status || "downloading") + " " + (p.percent || 0) + "%";
+        if (p.done) {
+          lastPullJob = null;
+          renderCatalog();
+          if (p.status === "success") await useLocal(r);
+          else document.getElementById("scanOut").textContent = p.error || p.status;
+          return;
+        }
+        setTimeout(tick, 800);
+      };
+      tick();
+    }
+
+    async function cancelPull() {
+      if (!lastPullJob) return;
+      await j("/api/catalog/pull/" + lastPullJob.id + "/cancel", { method: "POST" });
+      document.getElementById("scanOut").textContent = "cancelling…";
+    }
+
+    let modalOffset = 0;
+    let modalTotal = 0;
+    let modalTimer = null;
+    let modalBusy = false;
+
+    function fillSelect(id, values) {
+      const el = document.getElementById(id);
+      const cur = el.value;
+      const keep = new Set(["", ...(values || [])]);
+      el.innerHTML = "";
+      const all = document.createElement("option");
+      all.value = "";
+      all.textContent = "All";
+      el.appendChild(all);
+      (values || []).forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = v;
+        el.appendChild(o);
+      });
+      if (keep.has(cur)) el.value = cur;
+    }
+
+    function modalParams(offset) {
+      const p = new URLSearchParams();
+      const q = document.getElementById("modalFilter").value.trim();
+      if (q) p.set("q", q);
+      const provider = document.getElementById("modalProvider").value;
+      if (provider) p.set("provider", provider);
+      const useCase = document.getElementById("modalUse").value;
+      if (useCase) p.set("use_case", useCase);
+      const cap = document.getElementById("modalCaps").value;
+      if (cap) p.set("capability", cap);
+      const fit = document.getElementById("modalFit").value;
+      if (fit) p.set("fit", fit);
+      p.set("sort", document.getElementById("modalSort").value || "score");
+      if (document.getElementById("modalTools").checked) p.set("tools", "true");
+      p.set("offset", String(offset));
+      p.set("limit", "80");
+      return p.toString();
+    }
+
+    function paintModalRows(rows, append) {
+      const list = document.getElementById("modalList");
+      if (!append) list.innerHTML = "";
+      if (!rows.length && !append) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "No models match these filters.";
+        list.appendChild(empty);
+        return;
+      }
+      rows.forEach((r) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        const top = document.createElement("div");
+        top.className = "card-top";
+        const name = document.createElement("div");
+        name.className = "card-name";
+        name.textContent = r.name;
+        const badge = badgeFor(r.state);
+        const b = document.createElement("span");
+        b.className = "badge " + badge.cls;
+        b.textContent = r.sharded ? "sharded" : (r.FITS || badge.text);
+        top.appendChild(name);
+        top.appendChild(b);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const extra = [r.provider, r.use_case].filter(Boolean).join(" · ");
+        meta.textContent = (extra ? extra + " · " : "") + metaLine(r);
+        card.appendChild(top);
+        card.appendChild(meta);
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        if (r.state === "INSTALLED" && (r.ollama_name || "").trim()) {
+          const use = document.createElement("button");
+          use.textContent = "Use in this folder";
+          use.onclick = () => { setModal(false); useLocal(r); };
+          actions.appendChild(use);
+        }
+        if (r.sharded || r.state === "UNRESOLVABLE") {
+          const no = document.createElement("button");
+          no.className = "ghost";
+          no.disabled = true;
+          no.textContent = r.reason || "Can't download (sharded GGUF)";
+          actions.appendChild(no);
+        } else if (r.ollama_name) {
+          const pull = document.createElement("button");
+          pull.textContent = "Download & use";
+          pull.onclick = () => { setModal(false); pullRow(r); };
+          actions.appendChild(pull);
+        } else if (r.gguf_downloadable === false) {
+          const no = document.createElement("button");
+          no.className = "ghost";
+          no.disabled = true;
+          no.textContent = "No GGUF files in repo";
+          actions.appendChild(no);
+        } else {
+          const dl = document.createElement("button");
+          dl.textContent = "Download & use";
+          dl.onclick = () => downloadLlmfit(r);
+          actions.appendChild(dl);
+        }
+        card.appendChild(actions);
+        list.appendChild(card);
+      });
+    }
+
+    async function fetchModal(append) {
+      if (modalBusy) return;
+      modalBusy = true;
+      const status = document.getElementById("modalStatus");
+      status.textContent = append ? "loading more…" : "loading llmfit catalog…";
+      try {
+        const offset = append ? modalOffset : 0;
+        const data = await j("/api/catalog/llmfit?" + modalParams(offset));
+        if (data.filters) {
+          fillSelect("modalProvider", data.filters.providers || []);
+          fillSelect("modalUse", data.filters.use_cases || []);
+          fillSelect("modalCaps", data.filters.capabilities || []);
+        }
+        const rows = data.rows || [];
+        modalTotal = data.total || 0;
+        modalOffset = (append ? modalOffset : 0) + rows.length;
+        paintModalRows(rows, append);
+        const more = document.getElementById("modalMore");
+        more.style.display = modalOffset < modalTotal ? "block" : "none";
+        status.textContent = "Showing " + modalOffset + " of " + modalTotal +
+          (data.catalog_size ? " (catalog " + data.catalog_size + ")" : "") +
+          (data.error ? " · " + data.error : "");
+      } catch (e) {
+        status.textContent = String(e);
+      } finally {
+        modalBusy = false;
+      }
+    }
+
+    function scheduleModalFetch() {
+      clearTimeout(modalTimer);
+      modalTimer = setTimeout(() => fetchModal(false), 280);
+    }
+
+    function setModal(open) {
+      document.getElementById("llmfitModal").classList.toggle("on", open);
+      if (open) fetchModal(false);
+    }
+
+    let ollamaRows = [];
+
+    function paintOllamaRows(rows) {
+      const q = (document.getElementById("ollamaFilter").value || "").toLowerCase();
+      const list = document.getElementById("ollamaList");
+      list.innerHTML = "";
+      const filtered = rows.filter((r) => {
+        const n = (r.ollama_name || r.name || "").toLowerCase();
+        return !q || n.includes(q) || (r.name || "").toLowerCase().includes(q);
+      });
+      if (!filtered.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = rows.length
+          ? "No Ollama models match this filter."
+          : "No Ollama models found. Pull a tag below or browse llmfit for GGUF downloads.";
+        list.appendChild(empty);
+        return;
+      }
+      filtered.forEach((r) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        const tag = r.ollama_name || r.name;
+        const top = document.createElement("div");
+        top.className = "card-top";
+        const name = document.createElement("div");
+        name.className = "card-name";
+        name.textContent = tag;
+        const badge = badgeFor(r.state);
+        const b = document.createElement("span");
+        b.className = "badge " + badge.cls;
+        b.textContent = badge.text;
+        top.appendChild(name);
+        top.appendChild(b);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = metaLine(r);
+        card.appendChild(top);
+        card.appendChild(meta);
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        if (r.state === "INSTALLED") {
+          const use = document.createElement("button");
+          use.textContent = tag === currentPin ? "Using" : "Use in this folder";
+          if (tag === currentPin) use.disabled = true;
+          use.onclick = () => { setOllamaModal(false); useLocal(r); };
+          actions.appendChild(use);
+        } else if (r.state === "PULLABLE" && r.ollama_name) {
+          const pull = document.createElement("button");
+          pull.textContent = "Pull & use";
+          pull.onclick = () => { setOllamaModal(false); pullRow(r); };
+          actions.appendChild(pull);
+        }
+        card.appendChild(actions);
+        list.appendChild(card);
+      });
+    }
+
+    async function fetchOllamaModal() {
+      const status = document.getElementById("ollamaStatus");
+      status.textContent = "loading Ollama catalog…";
+      try {
+        const data = await j("/api/catalog/ollama?limit=200");
+        ollamaRows = data.rows || [];
+        paintOllamaRows(ollamaRows);
+        status.textContent = ollamaRows.length + " model(s)" +
+          (data.ollama === false ? " · Ollama not on PATH" : "");
+      } catch (e) {
+        status.textContent = String(e);
+      }
+    }
+
+    function setOllamaModal(open) {
+      document.getElementById("ollamaModal").classList.toggle("on", open);
+      if (open) fetchOllamaModal();
+    }
+
+    async function pullOllamaTag() {
+      const tag = (document.getElementById("ollamaPullTag").value || "").trim();
+      if (!tag) return;
+      setOllamaModal(false);
+      await pullRow({ ollama_name: tag, name: tag, state: "PULLABLE" });
+    }
+
+    async function downloadLlmfit(r) {
+      const status = document.getElementById("modalStatus");
+      const scan = document.getElementById("scanOut");
+      const msg = "downloading " + r.name + " with llmfit…";
+      status.textContent = msg;
+      scan.textContent = msg;
+      try {
+        const started = await j("/api/catalog/llmfit/download", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            name: r.name,
+            quant: r.quant || null,
+            gguf_sources: r.gguf_sources || [],
+          }),
+        });
+        const tick = async () => {
+          const p = await j("/api/catalog/llmfit/download/" + started.job_id);
+          const line = (p.status || "downloading") + (p.percent ? " " + Math.round(p.percent) + "%" : "");
+          status.textContent = line;
+          scan.textContent = line;
+          if (p.done) {
+            if (p.status === "success") {
+              const tag = p.ollama_tag;
+              status.textContent = "Imported as " + tag;
+              setModal(false);
+              await useLocal({ ollama_name: tag, name: tag, state: "INSTALLED" });
+            } else {
+              const errMsg = "Download failed: " + (p.error || p.status);
+              status.textContent = errMsg;
+              scan.textContent = errMsg;
+            }
+            return;
+          }
+          setTimeout(tick, 1000);
+        };
+        tick();
+      } catch (e) {
+        const errMsg = "Download error: " + (e.message || String(e));
+        status.textContent = errMsg;
+        scan.textContent = errMsg;
+      }
     }
 
     async function loadFiles() {
@@ -226,10 +799,18 @@
         const li = document.createElement("li");
         const name = document.createElement("span");
         name.textContent = f.path;
-        name.title = f.path;
+        name.title = f.path + " · " + f.size + " bytes";
+        if (f.writable) {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = "editable";
+          name.appendChild(tag);
+        }
         const a = document.createElement("a");
         a.href = "/api/download/file?path=" + encodeURIComponent(f.path);
-        a.textContent = "Download";
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Open file";
         li.appendChild(name);
         li.appendChild(a);
         ul.appendChild(li);
@@ -237,6 +818,87 @@
       if (!(data.files || []).length) {
         ul.innerHTML = "<li><span>No PDF / txt / md / docx files in this folder.</span></li>";
       }
+    }
+
+    // ---- file edit permission + diff confirmation -------------------------
+    let permission = "deny";
+    let confirmQueue = [];
+
+    function paintPermission(value) {
+      permission = value || "deny";
+      const sel = document.getElementById("permSelect");
+      if (sel.value !== permission) sel.value = permission;
+      const badge = document.getElementById("permState");
+      badge.className = "perm-state " + (permission === "allow" ? "on" : permission === "ask" ? "ask" : "off");
+      badge.textContent = permission === "allow" ? "writing on" : permission === "ask" ? "confirm first" : "off";
+    }
+
+    async function loadPermissions() {
+      const p = await j("/api/permissions");
+      paintPermission(p.fs_write);
+    }
+
+    async function setPermission(value) {
+      const p = await j("/api/permissions", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ fs_write: value }),
+      });
+      paintPermission(p.fs_write);
+      add("bot", value === "deny"
+        ? "File editing is off. I can read and search only."
+        : value === "ask"
+          ? "File editing is on with confirmation. I will show you a diff before anything is written."
+          : "File editing is on. I will write immediately; every replaced file is backed up to .agentforge/backups first.");
+    }
+
+    function renderDiff(text) {
+      const body = document.getElementById("diffBody");
+      body.innerHTML = "";
+      (text || "(new file - no previous content)").split("\n").forEach((line) => {
+        const span = document.createElement("span");
+        if (line.startsWith("+++") || line.startsWith("---")) span.className = "meta";
+        else if (line.startsWith("@@")) span.className = "hunk";
+        else if (line.startsWith("+")) span.className = "add";
+        else if (line.startsWith("-")) span.className = "del";
+        span.textContent = line + "\n";
+        body.appendChild(span);
+      });
+    }
+
+    function setDiffModal(open) {
+      document.getElementById("diffModal").classList.toggle("on", open);
+    }
+
+    function showNextConfirm() {
+      if (!confirmQueue.length) { setDiffModal(false); return; }
+      const item = confirmQueue[0];
+      document.getElementById("diffTitle").textContent =
+        (item.action === "edit" ? "Confirm edit - " : "Confirm new file - ") + item.path;
+      document.getElementById("diffMeta").textContent =
+        item.bytes + " bytes" + (item.exists ? " · replaces existing file (a backup is kept)" : " · new file") +
+        (confirmQueue.length > 1 ? " · " + confirmQueue.length + " changes queued" : "");
+      renderDiff(item.diff);
+      setDiffModal(true);
+    }
+
+    async function resolveConfirm(approve) {
+      const item = confirmQueue.shift();
+      if (!item) { setDiffModal(false); return; }
+      try {
+        const r = await j("/api/confirm", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ token: item.token, approve: approve, session_id: session }),
+        });
+        add("bot", r.applied
+          ? "Applied to " + r.path + " (" + r.bytes + " bytes)" + (r.backup ? " · backup " + r.backup : "")
+          : "Discarded the change to " + item.path + ".");
+        if (r.applied) await loadFiles();
+      } catch (e) {
+        add("bot", "Could not apply the change: " + String(e));
+      }
+      showNextConfirm();
     }
 
     async function boot() {
@@ -247,11 +909,56 @@
         document.getElementById("ingestWarn").textContent =
           w.no_text_layer_count + " files have no text layer and will miss lexical search.";
       }
-      renderLocal(await j("/api/scan"));
       await loadFiles();
-      loadModels().catch((e) => {
+      await loadPermissions().catch(() => paintPermission("deny"));
+      document.getElementById("permSelect").onchange = (ev) => {
+        setPermission(ev.target.value).catch((e) => add("bot", String(e)));
+      };
+      document.getElementById("diffApprove").onclick = () => resolveConfirm(true);
+      document.getElementById("diffReject").onclick = () => resolveConfirm(false);
+      document.getElementById("diffClose").onclick = () => { confirmQueue = []; setDiffModal(false); };
+      document.getElementById("diffModal").onclick = (ev) => {
+        if (ev.target.id === "diffModal") { confirmQueue = []; setDiffModal(false); }
+      };
+      loadCatalog().catch((e) => {
         document.getElementById("currentModel").textContent = String(e);
       });
+      document.getElementById("catFilter").oninput = renderCatalog;
+      document.getElementById("toolsOnly").onchange = renderCatalog;
+      document.getElementById("catTabs").onclick = (ev) => {
+        const btn = ev.target.closest("button[data-tab]");
+        if (!btn) return;
+        catTab = btn.getAttribute("data-tab");
+        document.querySelectorAll("#catTabs button").forEach((b) => b.classList.toggle("on", b === btn));
+        renderCatalog();
+      };
+      document.getElementById("browseLlmfit").onclick = () => setModal(true);
+      document.getElementById("browseOllama").onclick = () => setOllamaModal(true);
+      document.getElementById("closeLlmfit").onclick = () => setModal(false);
+      document.getElementById("closeOllama").onclick = () => setOllamaModal(false);
+      document.getElementById("llmfitModal").onclick = (ev) => {
+        if (ev.target.id === "llmfitModal") setModal(false);
+      };
+      document.getElementById("ollamaModal").onclick = (ev) => {
+        if (ev.target.id === "ollamaModal") setOllamaModal(false);
+      };
+      document.getElementById("ollamaFilter").oninput = () => paintOllamaRows(ollamaRows);
+      document.getElementById("ollamaReload").onclick = () => fetchOllamaModal();
+      document.getElementById("ollamaPullBtn").onclick = () => pullOllamaTag();
+      document.getElementById("ollamaPullTag").onkeydown = (ev) => {
+        if (ev.key === "Enter") { ev.preventDefault(); pullOllamaTag(); }
+      };
+      document.getElementById("modalFilter").oninput = scheduleModalFetch;
+      ["modalProvider", "modalUse", "modalCaps", "modalFit", "modalSort"].forEach((id) => {
+        document.getElementById(id).onchange = () => fetchModal(false);
+      });
+      document.getElementById("modalTools").onchange = () => fetchModal(false);
+      document.getElementById("modalMore").onclick = () => fetchModal(true);
+      document.getElementById("modalReload").onclick = async () => {
+        document.getElementById("modalStatus").textContent = "refreshing…";
+        await j("/api/catalog/llmfit?refresh=true&limit=1").catch(() => ({}));
+        fetchModal(false);
+      };
     }
 
     document.getElementById("saveKey").onclick = async () => {
@@ -272,75 +979,6 @@
       }
     };
 
-    document.getElementById("useModel").onclick = async () => {
-      const raw = document.getElementById("modelPick").value;
-      const [provider, name] = raw.split("|");
-      document.getElementById("scanOut").textContent = "pinning " + name + "…";
-      try {
-        const r = await j("/api/model", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ provider, name, probe: false }),
-        });
-        document.getElementById("scanOut").textContent = "Using " + r.model_pin.provider + " / " + r.model_pin.name;
-        document.getElementById("currentModel").textContent = "Using " + r.model_pin.provider + " / " + r.model_pin.name;
-        add("bot", "Model set to " + r.model_pin.provider + " / " + r.model_pin.name + ". Ask a question.");
-      } catch (e) {
-        document.getElementById("scanOut").textContent = String(e);
-      }
-    };
-
-    document.getElementById("pullModel").onclick = async () => {
-      const raw = document.getElementById("modelPick").value;
-      const [provider, name] = raw.split("|");
-      if (provider !== "ollama") {
-        document.getElementById("scanOut").textContent = "Pull is for Ollama tags only.";
-        return;
-      }
-      document.getElementById("scanOut").textContent = "ollama pull " + name + " (this can take several minutes)…";
-      try {
-        await j("/api/ollama/pull", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ name }),
-        });
-        await j("/api/model", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ provider: "ollama", name, probe: false }),
-        });
-        document.getElementById("scanOut").textContent = "Downloaded and pinned " + name;
-        await loadModels();
-        add("bot", "Downloaded " + name + " with Ollama and set it as the active model.");
-      } catch (e) {
-        document.getElementById("scanOut").textContent = String(e);
-      }
-    };
-
-    document.getElementById("installLlmfit").onclick = async () => {
-      document.getElementById("llmfitOut").textContent = "installing llmfit…";
-      try {
-        const r = await j("/api/install/llmfit", { method: "POST" });
-        renderLocal(await j("/api/scan"));
-        add("bot", r.llmfit ? "llmfit is installed. Loading models that fit this PC…" : "llmfit install finished. Check the sidebar.");
-        await loadModels();
-      } catch (e) {
-        document.getElementById("llmfitOut").className = "status bad";
-        document.getElementById("llmfitOut").textContent = String(e);
-      }
-    };
-
-    document.getElementById("scan").onclick = async () => {
-      document.getElementById("scanOut").textContent = "picking a local model that fits…";
-      try {
-        const r = await j("/api/scan/run", { method: "POST", headers: {"Content-Type":"application/json"}, body: "{}" });
-        document.getElementById("scanOut").textContent = r.english || r.reason || (r.ok ? "local pin ok" : "staying on cloud");
-        await loadModels();
-      } catch (e) {
-        document.getElementById("scanOut").textContent = String(e);
-      }
-    };
-
     document.getElementById("chatDl").onclick = (ev) => {
       ev.preventDefault();
       window.location.href = "/api/export/chat?session_id=" + encodeURIComponent(session);
@@ -348,16 +986,40 @@
 
     document.getElementById("form").onsubmit = async (ev) => {
       ev.preventDefault();
-      const text = document.getElementById("msg").value.trim();
+      const box = document.getElementById("msg");
+      const text = box.value.trim();
       if (!text) return;
-      document.getElementById("msg").value = "";
+      box.value = "";
+      box.style.height = "";
       add("user", text);
+      const thinking = document.createElement("div");
+      thinking.className = "msg bot";
+      thinking.id = "thinkingMsg";
+      thinking.textContent = "Thinking with local model…";
+      log.appendChild(thinking);
+      log.scrollTop = log.scrollHeight;
+      document.getElementById("scanOut").textContent = "";
+      const askBtn = document.querySelector("#form button[type=submit]");
+      if (askBtn) askBtn.disabled = true;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 240000);
       try {
-        const r = await j("/api/chat", { method: "POST", headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ message: text, session_id: session }) });
+        const r = await j("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ message: text, session_id: session }),
+          signal: ctrl.signal,
+        });
         session = r.session_id;
+        thinking.remove();
         const tools = (r.traces || []).filter(t => t.kind === "tool").map(t => t.tool).join(", ");
         add("bot", r.text || "(no text)", tools ? "tools: " + tools : "");
+        if (r.fs_write) paintPermission(r.fs_write);
+        if ((r.writes || []).length) await loadFiles();
+        if ((r.needs_confirm || []).length) {
+          confirmQueue = confirmQueue.concat(r.needs_confirm);
+          showNextConfirm();
+        }
         if (r.eval && r.eval.enumeration) {
           add("bot", "enumeration recall " + r.eval.enumeration.recall +
             (r.eval.enumeration.cause ? " · FAIL " + r.eval.enumeration.cause : " · pass"));
@@ -365,11 +1027,24 @@
         const u = r.usage || {};
         meter.textContent = `tokens ${u.prompt_tokens || 0} / ${u.max_tokens || 32000} · $${(u.usd || 0).toFixed(4)} / $${u.max_usd || 0.5}`;
       } catch (e) {
-        add("bot", String(e));
+        thinking.remove();
+        const msg = e && e.name === "AbortError"
+          ? "Timed out after 4 minutes. Pick a smaller Ready model (Browse Ollama) and try again."
+          : String(e);
+        add("bot", msg);
+        document.getElementById("scanOut").textContent = msg;
+      } finally {
+        clearTimeout(timer);
+        if (askBtn) askBtn.disabled = false;
       }
     };
 
     boot().catch((e) => add("bot", String(e)));
+
+    document.getElementById("msg").addEventListener("input", function () {
+      this.style.height = "auto";
+      this.style.height = Math.min(this.scrollHeight, window.innerHeight * 0.4) + "px";
+    });
   </script>
 </body>
 </html>

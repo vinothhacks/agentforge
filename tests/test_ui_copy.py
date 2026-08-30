@@ -12,11 +12,27 @@ def test_ui_has_no_pda_and_shows_llmfit() -> None:
     skill = (root / "templates" / "document-query" / "SKILL.md").read_text(encoding="utf-8")
     assert "PDA" not in html
     assert "PDA" not in skill
-    assert "llmfit" in html
-    assert "modelPick" in html
-    assert "/api/models" in html
+    assert "llmfit" in html or "Local models" in html
+    assert "/api/catalog" in html
+    assert "est. VRAM" in html
+    assert "OpenRouter" in html
+    assert "Browse llmfit models" in html
+    assert "Use case" in html
+    assert "Provider" in html
+    assert "Capabilities" in html
+    assert "Use in this folder" in html
+    assert "Download & use" in html
+    assert "Download Ollama" not in html
+    assert "llama.cpp (optional)" not in html
     assert "/api/download/file" in html
     assert "/api/export/chat" in html
+    # Phase 3: the edit surface must be discoverable and honestly labelled.
+    assert "Allow file edits" in html
+    assert "/api/permissions" in html
+    assert "/api/confirm" in html
+    assert "Open file" in html
+    assert "read only" in html
+    assert "backed up" in html
 
 
 def test_scan_files_and_downloads(tmp_path: Path) -> None:

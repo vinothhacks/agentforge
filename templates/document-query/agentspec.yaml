@@ -22,13 +22,20 @@ tools:
   - rag_search
   - fs_list
   - fs_read
+  - fs_write
+  - fs_edit
+  - fs_mkdir
 permissions:
-  fs_write: deny
+  # deny | ask | allow. Writes are sandboxed to the workspace, limited to
+  # .md .txt .json .csv .yaml .yml, capped at 512 KB, backed up before every
+  # replacement and appended to .agentforge/write_audit.jsonl.
+  # The sidebar "Allow file edits" control overrides this at runtime.
+  fs_write: allow
   shell: deny
   send_email: deny
 budgets:
   max_steps: 3
-  max_tools: 3
+  max_tools: 6
   max_tokens: 32000
   max_wall_s: 90
   max_usd: 0.50
