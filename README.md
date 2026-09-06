@@ -1,5 +1,7 @@
 # AgentForge
 
+![AgentForge: turn any LLM into an agent over your documents](docs/media/github-card.png)
+
 OpenRouter-first tool-using agent. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`. Indexes PDF / txt / md (not `.docx`).
 
 The UI lists **llmfit** and **Ollama** on the left, with install / download links. Workspace files and the chat can be downloaded from the same sidebar.
@@ -22,12 +24,6 @@ What the video shows, in order:
 6. **Ask** permission: a unified diff before any write lands on disk.
 7. `dedupe_results`, the six write gates in `files_write.py`, and `blocked_component` in `paths.py`.
 
-Social cards (generated for the project):
-
-| GitHub | LinkedIn |
-| --- | --- |
-| ![AgentForge GitHub card](docs/media/github-card.png) | ![AgentForge LinkedIn banner](docs/media/linkedin-banner.png) |
-
 ### Tech stack
 
 - **API and UI:** FastAPI + Uvicorn serving one hand-written vanilla JavaScript page. CORS names the bound origin.
@@ -40,7 +36,7 @@ Social cards (generated for the project):
 - **Data:** SQLite (sessions, traces, probe cards, settings) and Pydantic v2 models.
 - **Tooling:** uv, pytest (172 tests), Playwright, GitHub Actions.
 
-The demo assets were produced with Playwright (screenshots), OpenRouter text-to-speech (`deepgram/flux-tts`), and ffmpeg; the intro clip is `minimax/hailuo-3-max` and the cards are `google/gemini-2.5-flash-image`, both via OpenRouter.
+The demo assets were produced with Playwright (screenshots and the rendered banner), OpenRouter text-to-speech (`deepgram/flux-tts`), and ffmpeg; the intro clip is `minimax/hailuo-3-max` via OpenRouter.
 
 ## Run from Downloads (or any folder)
 
