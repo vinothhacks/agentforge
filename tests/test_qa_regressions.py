@@ -359,6 +359,25 @@ def test_a_term_bearing_question_falls_back_to_retrieval_not_a_listing() -> None
     assert enumeration_term("what files are in this folder") is None
 
 
+def test_a_repeated_identical_tool_call_is_rendered_once() -> None:
+    # Observed live on granite3.1-moe: the model called rag_search twice with
+    # identical args across two steps and the whole answer printed twice.
+    from gateway.runtime.loop import summarize_results
+
+    call = {
+        "tool": "rag_search",
+        "args": {"query": "demurrage", "limit": 5},
+        "result": {"hits": [{"path": "DOC-001.txt", "page": 1, "text": "Demurrage ..."}]},
+    }
+    once = summarize_results([call])
+    twice = summarize_results([call, dict(call)])
+    assert twice == once, "an identical repeated call must not duplicate the answer"
+
+    # A genuinely different call still contributes.
+    other = dict(call, args={"query": "berth", "limit": 5})
+    assert summarize_results([call, other]) != once
+
+
 def test_schema_reject_carries_plain_english() -> None:
     out = dispatch("fs_read", {"nonsense": 1, "also": 2}, lambda n, a: {})
     assert out["error"] == "schema_reject"

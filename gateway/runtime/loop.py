@@ -176,10 +176,31 @@ def _plural(n: int, one: str, many: str) -> str:
     return f"{n} {one if n == 1 else many}"
 
 
+def dedupe_results(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop repeats of the same call with the same arguments.
+
+    A model that searches twice for the same term adds nothing, but rendering
+    both printed the whole answer twice.
+    """
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for item in results:
+        try:
+            key = json.dumps([item.get("tool"), item.get("args")], sort_keys=True, default=str)
+        except (TypeError, ValueError):
+            out.append(item)
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
 def summarize_results(results: list[dict[str, Any]]) -> str:
     """Render tool output as plain English. The last-resort answer path."""
     lines: list[str] = []
-    for item in results:
+    for item in dedupe_results(results):
         tool = item.get("tool")
         data = item.get("result") or {}
         if not isinstance(data, dict):
