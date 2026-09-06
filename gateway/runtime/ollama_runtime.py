@@ -20,6 +20,18 @@ _JOBS: dict[str, dict[str, Any]] = {}
 _JOBS_LOCK = threading.Lock()
 
 
+def normalize_tag(name: str) -> str:
+    """`llama3.2` and `llama3.2:latest` are the same model to Ollama.
+
+    llmfit imports pin the bare form while /api/tags reports `:latest`, so an
+    exact string compare silently misses. Normalise both sides.
+    """
+    n = (name or "").strip()
+    if not n or ":" in n:
+        return n
+    return n + ":latest"
+
+
 class PullRejected(ValueError):
     pass
 
@@ -29,12 +41,28 @@ class OllamaRuntime:
         self.base = base.rstrip("/")
 
     def list(self) -> list[dict[str, Any]]:
+        return self.list_or_none() or []
+
+    def list_or_none(self) -> list[dict[str, Any]] | None:
+        """None when Ollama could not be reached, as opposed to an empty list."""
         try:
             r = httpx.get(f"{self.base}/api/tags", timeout=5.0)
             r.raise_for_status()
             return list((r.json() or {}).get("models") or [])
         except Exception:  # noqa: BLE001
-            return []
+            return None
+
+    def has_tag(self, name: str) -> bool | None:
+        """True/False when Ollama answers, None when it cannot be reached."""
+        models = self.list_or_none()
+        if models is None:
+            return None
+        want = normalize_tag(name)
+        for m in models:
+            have = str(m.get("name") or m.get("model") or "")
+            if have and normalize_tag(have) == want:
+                return True
+        return False
 
     def ensure_available(self, name: str, *, gguf_sources: Any = None) -> dict[str, Any]:
         if is_sharded_gguf(gguf_sources):
@@ -116,6 +144,15 @@ class OllamaRuntime:
                         ev = json.loads(line)
                     except json.JSONDecodeError:
                         continue
+                    # Ollama answers 200 and reports failure inside the stream:
+                    # {"error":"pull model manifest: file does not exist"}.
+                    # raise_for_status() never sees it.
+                    if ev.get("error"):
+                        with _JOBS_LOCK:
+                            _JOBS[job_id]["status"] = "error"
+                            _JOBS[job_id]["error"] = str(ev["error"])
+                            _JOBS[job_id]["done"] = True
+                        return
                     total = float(ev.get("total") or 0)
                     completed = float(ev.get("completed") or 0)
                     pct = (completed / total * 100.0) if total else 0.0
@@ -123,6 +160,19 @@ class OllamaRuntime:
                         _JOBS[job_id]["status"] = ev.get("status") or "pulling"
                         _JOBS[job_id]["percent"] = round(pct, 1)
                         _JOBS[job_id]["log"] += (ev.get("status") or "") + "\n"
+            # A stream can also end early (network drop) having reported
+            # nothing. Success is the tag actually resolving, not the loop
+            # exiting: confirm against /api/tags before declaring victory.
+            # `None` means we could not ask; only a definite "absent" fails
+            # the job, so an unreachable Ollama does not mask a good pull.
+            if self.has_tag(name) is False:
+                with _JOBS_LOCK:
+                    _JOBS[job_id]["status"] = "error"
+                    _JOBS[job_id]["error"] = (
+                        f"pull finished but {name!r} is not in Ollama's model list"
+                    )
+                    _JOBS[job_id]["done"] = True
+                return
             with _JOBS_LOCK:
                 _JOBS[job_id]["status"] = "success"
                 _JOBS[job_id]["percent"] = 100.0

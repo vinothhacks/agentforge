@@ -30,7 +30,9 @@ permissions:
   # .md .txt .json .csv .yaml .yml, capped at 512 KB, backed up before every
   # replacement and appended to .agentforge/write_audit.jsonl.
   # The sidebar "Allow file edits" control overrides this at runtime.
-  fs_write: allow
+  # `ask` on a fresh workspace: the confirm-diff flow stays discoverable, but
+  # a first run never writes to the user's document folder without consent.
+  fs_write: ask
   shell: deny
   send_email: deny
 budgets:

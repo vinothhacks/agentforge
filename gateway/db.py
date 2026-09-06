@@ -143,6 +143,10 @@ class Store:
         self.conn.commit()
         return self.get_usage(session_id)
 
+    def reset_usage(self, session_id: str) -> None:
+        self.conn.execute("DELETE FROM usage WHERE session_id=?", (session_id,))
+        self.conn.commit()
+
     def get_usage(self, session_id: str) -> dict[str, float | int]:
         row = self.conn.execute("SELECT * FROM usage WHERE session_id=?", (session_id,)).fetchone()
         if row is None:

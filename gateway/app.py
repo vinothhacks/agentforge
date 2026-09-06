@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -24,7 +25,12 @@ from gateway.llmfit_download import progress as llmfit_dl_progress
 from gateway.llmfit_download import start_download as llmfit_dl_start
 from gateway.local_scan import install_llmfit, scan as local_scan, try_local
 from gateway.runtime.llamacpp import status as llamacpp_status
-from gateway.runtime.ollama_runtime import OllamaRuntime, PullRejected, ollama_on_path
+from gateway.runtime.ollama_runtime import (
+    OllamaRuntime,
+    PullRejected,
+    normalize_tag,
+    ollama_on_path,
+)
 from gateway.packs.files import fs_list, fs_read
 from gateway.packs.files_write import (
     ALLOWED_EXTS,
@@ -42,7 +48,16 @@ from gateway.providers import ProviderError
 from gateway.runtime.loop import run_loop, sanitize_messages
 from gateway.runtime.tools import ALL_TOOLS
 from gateway.spec import AgentSpec, Budgets, ModelPin, load_spec
-from gateway.stats import max_steps_from_lo95
+from gateway.stats import effective_lo95, max_steps_from_lo95
+
+# A pin selected without a probe has no measurement. `measured: False` keeps a
+# conservative default from ever being read back as evidence.
+UNMEASURED: dict[str, object] = {
+    "per_step_success_lo95": None,
+    "max_tools": 3,
+    "max_steps": 3,
+    "measured": False,
+}
 
 DEFAULT_PORT = 8788
 STATIC = Path(__file__).parent / "static"
@@ -59,8 +74,10 @@ class KeyIn(BaseModel):
 
 
 class ProbeIn(BaseModel):
-    provider: str = "openrouter"
-    name: str = "openai/gpt-4o-mini"
+    # Empty means "probe whatever is pinned right now". A probe measures the
+    # pin; it must never silently select a different model for the user.
+    provider: str = ""
+    name: str = ""
     mode: str = "fast"
 
 
@@ -97,6 +114,10 @@ class CatalogPullIn(BaseModel):
     name: str
     ollama_name: str | None = None
     gguf_sources: list | None = None
+
+
+class SessionResetIn(BaseModel):
+    session_id: str = "default"
 
 
 class CatalogMeasureIn(BaseModel):
@@ -144,7 +165,7 @@ def _pin_ollama(store: Store, name: str) -> ModelPin:
                 "verdict": "agent",
                 "cause": None,
                 "model_pin": pin.model_dump(),
-                "measured": {"per_step_success_lo95": 0.5, "max_tools": 3, "max_steps": 3},
+                "measured": UNMEASURED,
             }
         ),
     )
@@ -170,7 +191,7 @@ def default_spec(workspace: Path, store: Store, *, ollama_rt: OllamaRuntime | No
     card_raw = store.get_setting("card")
     if card_raw:
         card = json.loads(card_raw)
-        lo = card.get("measured", {}).get("per_step_success_lo95", 0.72)
+        lo = effective_lo95(card.get("measured", {}).get("per_step_success_lo95"))
         spec.budgets = Budgets(
             max_steps=max_steps_from_lo95(lo),
             max_tools=max(len(ALL_TOOLS), card.get("measured", {}).get("max_tools") or 3),
@@ -254,6 +275,26 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
 
     # Read-only executor for callers that have no session/permission context.
     executor = make_executor("deny", "default")
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        # 1x1 transparent GIF. Cheaper than shipping a file, and stops the
+        # 404 that was the only console error in the whole QA pass.
+        return Response(
+            content=base64.b64decode(
+                "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            ),
+            media_type="image/gif",
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    @app.post("/api/session/reset")
+    def session_reset(body: SessionResetIn):
+        """Start a fresh chat. Without this the only reset was deleting the db."""
+        sid = (body.session_id or "default").strip() or "default"
+        store.save_session(sid, str(workspace), [])
+        store.reset_usage(sid)
+        return {"ok": True, "session_id": sid}
 
     @app.get("/api/health")
     def health():
@@ -346,11 +387,31 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
     @app.post("/api/probe")
     def probe(body: ProbeIn):
         key = store.get_setting("openrouter_key") or os.environ.get("OPENROUTER_API_KEY")
-        card = run_probe(provider=body.provider, name=body.name, mode=body.mode, n=3, api_key=key)
+        pin = _spec().model_pin
+        provider = (body.provider or "").strip() or pin.provider
+        name = (body.name or "").strip() or pin.name
+        card = run_probe(provider=provider, name=name, mode=body.mode, n=3, api_key=key)
+        # A probe measures the pinned model. It does not select one: writing
+        # `model_pin` here used to replace the user's choice with the probe's
+        # own target and, on failure, 409 every subsequent chat with no way out.
         store.set_setting("card", json.dumps(card))
-        store.set_setting("model_pin", json.dumps(card["model_pin"]))
         store.save_card(card)
-        return {k: card[k] for k in ("model_pin", "measured", "verdict", "cause") if k in card}
+        out = {k: card[k] for k in ("model_pin", "measured", "verdict", "cause") if k in card}
+        out["probed"] = {"provider": provider, "name": name}
+        return out
+
+    @app.post("/api/probe/clear")
+    def probe_clear():
+        """Drop a failed verdict so a bad probe is not a dead end."""
+        pin = _spec().model_pin
+        card = {
+            "verdict": "agent",
+            "cause": None,
+            "model_pin": pin.model_dump(),
+            "measured": UNMEASURED,
+        }
+        store.set_setting("card", json.dumps(card))
+        return {"ok": True, "verdict": "agent", "model_pin": pin.model_dump()}
 
     @app.get("/api/scan")
     def scan(quick: bool = True):
@@ -415,6 +476,7 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
         fit: str = "",
         sort: str = "score",
         tools: bool | None = None,
+        downloadable: bool | None = None,
         offset: int = 0,
         limit: int = 80,
         refresh: bool = False,
@@ -428,6 +490,7 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
             fit=fit,
             sort=sort,
             tools=tools,
+            downloadable=downloadable,
             offset=offset,
             limit=limit,
             memory=mem,
@@ -447,9 +510,14 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
         ctx_raw = store.get_setting("catalog_max_context")
         max_ctx = int(ctx_raw) if ctx_raw else None
         data = merge_catalog(memory=mem, max_context=max_ctx, live=True)
-        want = {(ollama_name or "").strip(), name.strip()} - {""}
+        want = {normalize_tag(t) for t in ((ollama_name or "").strip(), name.strip()) if t}
         for row in data.get("rows") or []:
-            if row.get("name") in want or row.get("ollama_name") in want:
+            have = {
+                normalize_tag(str(row.get(k) or ""))
+                for k in ("name", "ollama_name")
+                if row.get(k)
+            }
+            if have & want:
                 return row
         return None
 
@@ -548,7 +616,7 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
                     "verdict": "agent",
                     "cause": None,
                     "model_pin": pin.model_dump(),
-                    "measured": {"per_step_success_lo95": 0.5, "max_tools": 3, "max_steps": 3},
+                    "measured": UNMEASURED,
                 }
             ),
         )
@@ -583,10 +651,12 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
                 continue
             if p.suffix.lower() not in exts or p.name.startswith("~$"):
                 continue
+            indexed = index.indexed_paths()
             rows.append(
                 {
                     "path": rel.as_posix(),
                     "size": p.stat().st_size,
+                    "indexed": rel.as_posix() in indexed,
                     "writable": p.suffix.lower() in ALLOWED_EXTS,
                 }
             )
@@ -716,7 +786,9 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
         # usage: approximate split
         turn = int(out["usage"].get("turn_tokens") or 0)
         usd = float(out["usage"].get("usd") or 0)
-        totals = store.add_usage(session_id, turn, 0, usd)
+        prompt_t = int(out["usage"].get("prompt_tokens") or 0)
+        completion_t = int(out["usage"].get("completion_tokens") or turn - prompt_t)
+        totals = store.add_usage(session_id, prompt_t, completion_t, usd)
         totals["turn_tokens"] = turn
         totals["prompt_tokens"] = int(totals.get("prompt_tokens") or 0)
         totals["completion_tokens"] = int(totals.get("completion_tokens") or 0)
@@ -736,9 +808,11 @@ def make_app(workspace: Path, store: Store, *, port: int = DEFAULT_PORT) -> Fast
                     tool_paths.extend(payload.get("paths") or [])
                 except json.JSONDecodeError:
                     continue
-        lo95 = 0.0
+        lo95 = effective_lo95(None)
         if card_raw:
-            lo95 = json.loads(card_raw).get("measured", {}).get("per_step_success_lo95", 0.0)
+            lo95 = effective_lo95(
+                json.loads(card_raw).get("measured", {}).get("per_step_success_lo95")
+            )
         scored = score_run(
             index=index,
             question=body.message,

@@ -12,6 +12,25 @@ import math
 Z95 = 1.96
 MIN_SURVIVAL = 0.5
 
+# Budget math to use when a pin was never probed. Deliberately below the 0.40
+# `agent` bar so an unmeasured pin is never mistaken for a measured one: it
+# still gets the 3 steps v1 needs, but nothing reports it as evidence.
+UNMEASURED_LO95 = 0.40
+
+
+def effective_lo95(value: object) -> float:
+    """Coerce a possibly-missing per_step_success_lo95 to a usable float.
+
+    `None` means "never probed" and maps to UNMEASURED_LO95 rather than 0.0,
+    which would collapse max_steps to 1.
+    """
+    if value is None:
+        return UNMEASURED_LO95
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return UNMEASURED_LO95
+
 
 def wilson_interval(successes: int, n: int, z: float = Z95) -> tuple[float, float]:
     if n <= 0:

@@ -141,6 +141,35 @@ def openai_tools(enabled: list[str], permission: str = "deny") -> list[dict[str,
 Executor = Callable[[str, dict[str, Any]], dict[str, Any]]
 
 
+def _sibling_for(name: str, args: dict[str, Any], available: list[str] | None) -> str | None:
+    """The one other read tool these exact args validate against, if any."""
+    if not isinstance(args, dict) or not args:
+        # No arguments at all is a missing-argument error, not a call aimed at
+        # the wrong tool. Rerouting it would run something nobody asked for.
+        return None
+    pool = [t for t in READ_TOOLS if t != name]
+    if available is not None:
+        pool = [t for t in pool if t in available]
+    matches = []
+    for cand in pool:
+        try:
+            validate_args(TOOL_SCHEMAS[cand], args, cand)
+        except SchemaReject:
+            continue
+        matches.append(cand)
+    return matches[0] if len(matches) == 1 else None
+
+
+def _reject_detail(name: str, errors: Any) -> str:
+    """schema_reject is internal vocabulary. Users get a sentence."""
+    props = sorted((TOOL_SCHEMAS.get(name) or {}).get("properties") or {})
+    allowed = ", ".join(f"`{p}`" for p in props) or "no arguments"
+    return (
+        f"`{name}` was called with arguments it does not accept "
+        f"({errors}). It takes {allowed}."
+    )
+
+
 def dispatch(
     name: str,
     args: dict[str, Any],
@@ -167,5 +196,22 @@ def dispatch(
     try:
         clean = validate_args(TOOL_SCHEMAS[name], args, name)
     except SchemaReject as exc:
-        return {"error": "schema_reject", "tool": name, "errors": exc.errors}
+        # Small tool-calling models routinely address the right arguments to
+        # the wrong tool -- `fs_list(query=..., limit=...)` is rag_search's
+        # signature. If the args fit exactly one sibling, run that instead of
+        # dead-ending the turn.
+        sibling = _sibling_for(name, args, available)
+        if sibling:
+            clean = validate_args(TOOL_SCHEMAS[sibling], args, sibling)
+            out = executor(sibling, clean)
+            if isinstance(out, dict):
+                out = dict(out)
+                out["rerouted_from"] = name
+            return out
+        return {
+            "error": "schema_reject",
+            "tool": name,
+            "errors": exc.errors,
+            "detail": _reject_detail(name, exc.errors),
+        }
     return executor(name, clean)

@@ -51,6 +51,12 @@ def _fake_llmfit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *, mode: str =
     return FIXTURE_BIN
 
 
+def _stub_runtime_tags(monkeypatch: pytest.MonkeyPatch, names: list[str]) -> None:
+    """Make /api/tags report `names` for the pull-verification check."""
+    rows = [{"name": n} for n in names]
+    monkeypatch.setattr(OllamaRuntime, "list_or_none", lambda self: list(rows))
+
+
 def _stub_ollama(monkeypatch: pytest.MonkeyPatch, models: list[dict[str, Any]] | None = None) -> None:
     tags = models if models is not None else [{"name": "tinyllama:latest", "size_gb": 0.6}]
 
@@ -267,6 +273,7 @@ def test_pull_cancel_resume(monkeypatch: pytest.MonkeyPatch) -> None:
         return FakeResp()
 
     monkeypatch.setattr("gateway.runtime.ollama_runtime.httpx.stream", fake_stream)
+    _stub_runtime_tags(monkeypatch, ["tinyllama:latest"])
     rt = OllamaRuntime()
     started = rt.pull_start("tinyllama")
     job_id = started["job_id"]
@@ -437,6 +444,7 @@ def test_rag_answer_grounded(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
         }
 
     monkeypatch.setattr("gateway.app.merge_catalog", fake_merge)
+    _stub_runtime_tags(monkeypatch, ["tinyllama:latest"])
     client = _client(tmp_path)
     pull = client.post("/api/catalog/pull", json={"name": "tinyllama", "ollama_name": "tinyllama"})
     assert pull.status_code == 200

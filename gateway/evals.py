@@ -31,6 +31,7 @@ def enumeration_recall(index: HybridIndex, term: str, returned_paths: list[str])
             "returned": len(got),
             "hits": 0,
             "recall": 1.0,
+            "precision": 1.0,
             "cause": None,
             "missing": [],
         }
@@ -65,10 +66,12 @@ def score_run(
 ) -> dict[str, Any]:
     paths = list(dict.fromkeys(tool_paths + extract_paths_from_text(answer)))
     enum = None
+    # Grade enumeration only when the question names the term to enumerate.
+    # A hardcoded fallback ("demurrage", lifted from the sample corpus) failed
+    # every answer to a question that merely contained the letters "list".
     m = re.search(r"mention(?:ing)?\s+(\w+)", question, flags=re.I)
-    if m or "list" in question.lower():
-        term = m.group(1) if m else "demurrage"
-        enum = enumeration_recall(index, term, paths)
+    if m:
+        enum = enumeration_recall(index, m.group(1), paths)
     return {
         "question": question,
         "enumeration": enum,

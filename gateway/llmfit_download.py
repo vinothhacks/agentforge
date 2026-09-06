@@ -52,13 +52,22 @@ def local_ollama_tag(hf_name: str) -> str:
     return ("af-" + slug)[:80].strip("-") or "af-model"
 
 
+ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+
+
+def strip_ansi(text: str) -> str:
+    """llmfit's progress line carries erase-line escapes; they render as boxes."""
+    return ANSI_RE.sub("", text or "")
+
+
 def _append(job_id: str, line: str, percent: float | None = None) -> None:
+    clean = strip_ansi(line)
     with _LOCK:
         job = _JOBS[job_id]
-        job["log"] += line + "\n"
+        job["log"] += clean + "\n"
         if percent is not None:
             job["percent"] = max(float(job.get("percent") or 0), min(99.0, percent))
-        job["status"] = line.strip()[:80] or job["status"]
+        job["status"] = clean.strip()[:80] or job["status"]
 
 
 def _newest_gguf(root: Path, since: float) -> Path | None:

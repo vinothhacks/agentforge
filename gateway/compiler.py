@@ -6,7 +6,7 @@ from pathlib import Path
 
 from gateway.runtime.tools import ALL_TOOLS
 from gateway.spec import AgentSpec, Budgets, ModelPin, dump_spec, load_spec
-from gateway.stats import max_steps_from_lo95, max_tools_from_lo95
+from gateway.stats import effective_lo95, max_steps_from_lo95, max_tools_from_lo95
 
 TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
@@ -25,7 +25,7 @@ def compile_workspace(workspace: Path, card: dict | None = None) -> AgentSpec:
         pin = card.get("model_pin") or {}
         spec.model_pin = ModelPin.model_validate(pin)
         m = card.get("measured") or {}
-        lo = float(m.get("per_step_success_lo95") or 0.0)
+        lo = effective_lo95(m.get("per_step_success_lo95"))
         spec.budgets = Budgets(
             max_steps=max_steps_from_lo95(lo),
             max_tools=max(len(ALL_TOOLS), int(m.get("max_tools") or max_tools_from_lo95(lo))),

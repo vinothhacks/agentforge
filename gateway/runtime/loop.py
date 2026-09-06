@@ -10,6 +10,7 @@ Two hard guarantees this module owes the UI:
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import Any, Callable, TypedDict
 
@@ -73,6 +74,8 @@ class AgentState(TypedDict, total=False):
     messages: list[dict[str, Any]]
     step: int
     tokens: int
+    prompt_tokens: int
+    completion_tokens: int
     usd: float
     started: float
     stop: str | None
@@ -142,6 +145,7 @@ def wants_file_list(user_text: str) -> bool:
         p in t
         for p in (
             "what files",
+            "which files",
             "what resume files",
             "list every",
             "list the file",
@@ -151,6 +155,12 @@ def wants_file_list(user_text: str) -> bool:
             "how many docx",
         )
     )
+
+
+def enumeration_term(user_text: str) -> str | None:
+    """The term a question asks the agent to find files by, if it names one."""
+    m = re.search(r"mention(?:ing|s)?\s+([\w-]+)", user_text or "", flags=re.I)
+    return m.group(1) if m else None
 
 
 def list_args_for(user_text: str) -> dict[str, Any]:
@@ -286,6 +296,8 @@ def run_loop(
             timeout=call_timeout,
         )
         state["tokens"] += resp["prompt_tokens"] + resp["completion_tokens"]
+        state["prompt_tokens"] += resp["prompt_tokens"]
+        state["completion_tokens"] += resp["completion_tokens"]
         state["usd"] += estimate_usd(
             spec.model_pin.provider, resp["prompt_tokens"], resp["completion_tokens"]
         )
@@ -378,6 +390,8 @@ def run_loop(
         "messages": messages,
         "step": 0,
         "tokens": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
         "usd": 0.0,
         "started": time.perf_counter(),
         "stop": None,
@@ -393,11 +407,18 @@ def run_loop(
     results = list(out.get("results") or [])
     has_read = any(r.get("tool") in {"fs_list", "fs_read", "rag_search"} for r in results)
     if not has_read and wants_file_list(user_text):
-        args = list_args_for(user_text)
-        fallback = dispatch("fs_list", args, executor, available=available)
-        results.append({"tool": "fs_list", "args": args, "result": fallback})
+        # "Which files mention X?" is a retrieval question, not a directory
+        # listing. Answering it with fs_list returns every file in the folder,
+        # which scores recall 1.0 while answering nothing the user asked.
+        term = enumeration_term(user_text)
+        if term and (available is None or "rag_search" in available):
+            tool, args = "rag_search", {"query": term, "limit": 40}
+        else:
+            tool, args = "fs_list", list_args_for(user_text)
+        fallback = dispatch(tool, args, executor, available=available)
+        results.append({"tool": tool, "args": args, "result": fallback})
         out.setdefault("traces", []).append(
-            {"kind": "tool", "tool": "fs_list", "args": args, "error": fallback.get("error"), "fallback": True}
+            {"kind": "tool", "tool": tool, "args": args, "error": fallback.get("error"), "fallback": True}
         )
     text = finalize(out.get("final") or "", results, out.get("stop"))
     confirms = [
@@ -429,6 +450,8 @@ def run_loop(
         "writes": writes,
         "usage": {
             "turn_tokens": out.get("tokens") or 0,
+            "prompt_tokens": out.get("prompt_tokens") or 0,
+            "completion_tokens": out.get("completion_tokens") or 0,
             "usd": out.get("usd") or 0.0,
             "stop": out.get("stop"),
         },

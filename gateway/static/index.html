@@ -6,209 +6,529 @@
   <title>AgentForge</title>
   <style>
     :root {
-      --bg: #0f1419;
-      --panel: #1a222c;
-      --ink: #e8eef4;
-      --muted: #8b9aab;
-      --accent: #3d9cf0;
-      --warn: #e0a14a;
-      --bad: #e05a5a;
-      --ok: #5ec98a;
-      --line: #2a3542;
+      color-scheme: light;
+      /* Bright, saturated house palette. */
+      --violet: #6c3cff;
+      --violet-soft: #efe9ff;
+      --magenta: #ff3d9a;
+      --cyan: #00b4f0;
+      --cyan-soft: #e0f6ff;
+      --lime: #00c07a;
+      --lime-soft: #dcfaee;
+      --amber: #f59300;
+      --amber-soft: #fff1d9;
+      --coral: #ff3b52;
+      --coral-soft: #ffe6e9;
+
+      --bg: #f6f4ff;
+      --bg-2: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #fbfaff;
+      --ink: #16123a;
+      --ink-2: #3d3767;
+      --muted: #716d99;
+      --line: #e6e1fa;
+      --line-2: #d7d0f5;
+
+      --brand: linear-gradient(100deg, #6c3cff 0%, #a63cff 48%, #ff3d9a 100%);
+      --brand-flat: #6c3cff;
+      --shadow-sm: 0 1px 2px rgba(38, 20, 90, .06), 0 2px 6px rgba(38, 20, 90, .05);
+      --shadow-md: 0 4px 12px rgba(56, 30, 120, .10), 0 12px 28px rgba(56, 30, 120, .07);
+      --shadow-lg: 0 18px 50px rgba(40, 20, 90, .22);
+      --radius: 14px;
+      --radius-sm: 10px;
     }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --violet: #9c7bff;
+        --violet-soft: #2a2150;
+        --magenta: #ff69b0;
+        --cyan: #45c9ff;
+        --cyan-soft: #12304a;
+        --lime: #34dfa0;
+        --lime-soft: #10382b;
+        --amber: #ffb43d;
+        --amber-soft: #3d2c08;
+        --coral: #ff7080;
+        --coral-soft: #431a20;
+
+        --bg: #14112b;
+        --bg-2: #191534;
+        --surface: #1e1943;
+        --surface-2: #241e4e;
+        --ink: #f2eeff;
+        --ink-2: #d7cffb;
+        --muted: #a49dd0;
+        --line: #322a63;
+        --line-2: #3d3475;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+        --shadow-md: 0 6px 18px rgba(0, 0, 0, .38);
+        --shadow-lg: 0 20px 56px rgba(0, 0, 0, .55);
+      }
+    }
+
     * { box-sizing: border-box; }
+
     body {
-      margin: 0; background: var(--bg); color: var(--ink);
-      font: 15px/1.45 "Segoe UI", system-ui, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      background-image:
+        radial-gradient(1100px 460px at 8% -12%, rgba(108, 60, 255, .16), transparent 62%),
+        radial-gradient(900px 420px at 96% -6%, rgba(255, 61, 154, .13), transparent 60%);
+      background-attachment: fixed;
+      color: var(--ink);
+      font: 15px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      /* Header height varies with font metrics, so the shell is a flex column
+         rather than main: calc(100vh - <a guess>). That guess was 8px short
+         and gave the page a second scrollbar next to the sidebar's own. */
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel);
+
+    /* ---------- header ---------------------------------------------------- */
+    header.top {
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      padding: 12px 22px; background: var(--brand); color: #fff;
+      box-shadow: var(--shadow-md); position: relative; z-index: 5; flex: none;
     }
-    header h1 { font-size: 16px; margin: 0; font-weight: 600; }
-    header .sub { color: var(--muted); font-size: 12px; }
-    .meter { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
-    main { display: grid; grid-template-columns: 400px 1fr; height: calc(100vh - 54px); overflow: hidden; }
-    aside { border-right: 1px solid var(--line); padding: 16px; background: #12181f; overflow: auto; min-height: 0; }
-    aside::-webkit-scrollbar { width: 8px; }
-    aside::-webkit-scrollbar-thumb { background: #3a4654; border-radius: 8px; }
-    aside label { display: block; font-size: 11px; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .spark {
+      width: 34px; height: 34px; border-radius: 11px; flex: none;
+      background: rgba(255, 255, 255, .2);
+      border: 1px solid rgba(255, 255, 255, .38);
+      display: grid; place-items: center; font-size: 17px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+    }
+    .brand h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+    .brand .sub {
+      font-size: 12px; color: rgba(255, 255, 255, .86); max-width: 46vw;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .head-right { display: flex; align-items: center; gap: 10px; flex: none; }
+    .meter {
+      font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 600;
+      color: #fff; background: rgba(255, 255, 255, .18);
+      border: 1px solid rgba(255, 255, 255, .3);
+      border-radius: 999px; padding: 6px 13px; white-space: nowrap;
+    }
+    .head-btn {
+      width: auto; margin: 0; padding: 7px 14px; font-size: 13px; font-weight: 650;
+      border-radius: 999px; background: rgba(255, 255, 255, .17); color: #fff;
+      border: 1px solid rgba(255, 255, 255, .38); cursor: pointer;
+    }
+    .head-btn:hover { background: rgba(255, 255, 255, .3); }
+
+    /* ---------- layout ---------------------------------------------------- */
+    main { display: grid; grid-template-columns: 372px 1fr; flex: 1; min-height: 0; overflow: hidden; }
+    aside {
+      border-right: 1px solid var(--line); padding: 16px 15px 26px;
+      background: var(--bg-2); overflow: auto; min-height: 0;
+    }
+    aside::-webkit-scrollbar, .cat-list::-webkit-scrollbar,
+    .log::-webkit-scrollbar, .modal .list::-webkit-scrollbar { width: 10px; }
+    aside::-webkit-scrollbar-thumb, .cat-list::-webkit-scrollbar-thumb,
+    .log::-webkit-scrollbar-thumb, .modal .list::-webkit-scrollbar-thumb {
+      background: var(--line-2); border-radius: 10px; border: 3px solid transparent;
+      background-clip: content-box;
+    }
+
+    /* ---------- sidebar panels -------------------------------------------- */
+    .panel {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 13px 14px 15px; margin-bottom: 13px; box-shadow: var(--shadow-sm);
+    }
+    .panel > h2 {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 10px;
+      font-size: 12px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+      color: var(--ink-2);
+    }
+    .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; background: var(--violet); }
+    .dot.c { background: var(--cyan); }
+    .dot.g { background: var(--lime); }
+    .dot.a { background: var(--amber); }
+    .dot.m { background: var(--magenta); }
+
+    aside label {
+      display: block; font-size: 11px; color: var(--muted); margin: 12px 0 5px;
+      text-transform: uppercase; letter-spacing: .05em; font-weight: 650;
+    }
+    aside label:first-of-type { margin-top: 0; }
+
     input, textarea, button, select {
-      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
-      background: var(--bg); color: var(--ink); font: inherit;
+      width: 100%; padding: 9px 11px; border-radius: var(--radius-sm);
+      border: 1px solid var(--line-2); background: var(--surface);
+      color: var(--ink); font: inherit;
     }
-    button { cursor: pointer; background: var(--accent); border: 0; color: #062033; font-weight: 600; margin-top: 8px; }
-    button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-    button:disabled { opacity: .45; cursor: not-allowed; }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible {
+      outline: 3px solid rgba(108, 60, 255, .32); outline-offset: 1px; border-color: var(--violet);
+    }
+    button {
+      cursor: pointer; background: var(--brand); border: 0; color: #fff;
+      font-weight: 650; margin-top: 8px; box-shadow: var(--shadow-sm);
+      transition: transform .06s ease, filter .12s ease;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.07); }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button.ghost {
+      background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-2);
+      box-shadow: none;
+    }
+    button.ghost:hover:not(:disabled) { background: var(--violet-soft); border-color: var(--violet); }
+    button:disabled { opacity: .45; cursor: not-allowed; filter: none; }
     a.btn {
-      display: block; text-align: center; text-decoration: none; padding: 8px 10px;
-      border-radius: 6px; border: 1px solid var(--line); color: var(--ink); margin-top: 8px; font-weight: 600;
+      display: block; text-align: center; text-decoration: none; padding: 9px 11px;
+      border-radius: var(--radius-sm); border: 1px solid var(--line-2);
+      background: var(--surface-2); color: var(--ink); margin-top: 8px; font-weight: 650;
     }
+    a.btn:hover { background: var(--violet-soft); border-color: var(--violet); }
     select { margin-top: 0; }
-    .hw { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
-    .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
-    .ok { color: var(--ok); }
-    .bad { color: var(--bad); }
-    .status { font-size: 13px; margin-top: 4px; }
-    .files { list-style: none; padding: 0; margin: 8px 0 0; }
-    .files li { display: flex; gap: 8px; align-items: center; font-size: 12px; margin: 0 0 6px; }
-    .files span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
-    .files a { color: var(--accent); text-decoration: none; flex: none; }
-    .chat { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-    .log { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; }
-    .bubble { max-width: 720px; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; }
-    .user { background: #243044; margin-left: auto; }
-    .bot { background: var(--panel); border: 1px solid var(--line); }
-    .trace { font-size: 12px; color: var(--muted); margin: -8px 0 12px; }
+
+    .hw { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.45; }
+    .note { font-size: 12px; color: var(--muted); margin-top: 9px; line-height: 1.5; }
+    .status { font-size: 13px; margin-top: 5px; color: var(--ink-2); word-break: break-word; }
+    .status:empty { margin: 0; }
+    .ok { color: var(--lime); }
+    .bad { color: var(--coral); }
+
+    /* ---------- workspace files ------------------------------------------- */
+    .files { list-style: none; padding: 0; margin: 6px 0 0; }
+    .files li {
+      display: flex; gap: 8px; align-items: center; font-size: 12px;
+      margin: 0 0 4px; padding: 5px 8px; border-radius: 8px; background: var(--surface-2);
+      border: 1px solid transparent;
+    }
+    .files li:hover { border-color: var(--line-2); }
+    .files span.fname {
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2);
+    }
+    .files a { color: var(--violet); text-decoration: none; flex: none; font-weight: 650; }
+    .files a:hover { text-decoration: underline; }
+    .files li .tag {
+      font-size: 10px; font-weight: 700; letter-spacing: .03em; flex: none;
+      color: var(--cyan); background: var(--cyan-soft);
+      border-radius: 6px; padding: 2px 6px; margin-left: 6px;
+    }
+    .files li .tag.stale { color: var(--amber); background: var(--amber-soft); }
+
+    /* ---------- chat ------------------------------------------------------ */
+    .chat { display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: var(--bg); }
+    .log { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 24px 8px; }
+    .bubble {
+      max-width: 760px; margin: 0 0 14px; padding: 12px 15px; border-radius: var(--radius);
+      white-space: pre-wrap; word-break: break-word; line-height: 1.55;
+      box-shadow: var(--shadow-sm);
+    }
+    .bubble.user {
+      background: var(--brand); color: #fff; margin-left: auto;
+      border-bottom-right-radius: 4px; box-shadow: var(--shadow-md);
+    }
+    .bubble.bot {
+      background: var(--surface); border: 1px solid var(--line);
+      border-left: 4px solid var(--cyan); border-bottom-left-radius: 4px;
+    }
+    .bubble.thinking { color: var(--muted); font-style: italic; }
+    .trace {
+      font-size: 11.5px; color: var(--muted); margin: -8px 0 14px; padding-left: 4px;
+      font-weight: 600; letter-spacing: .01em;
+    }
+    .welcome { max-width: 620px; margin: 6vh auto 0; text-align: center; color: var(--muted); }
+    .welcome .big {
+      font-size: 27px; font-weight: 750; letter-spacing: -.02em; margin-bottom: 8px;
+      background: var(--brand); -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: var(--brand-flat);
+    }
+    .welcome p { margin: 0 0 6px; font-size: 14px; }
+
     form.composer {
-      display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line);
-      flex-shrink: 0; align-items: flex-end; background: var(--panel);
+      display: flex; gap: 10px; padding: 14px 18px 16px; border-top: 1px solid var(--line);
+      flex-shrink: 0; align-items: flex-end; background: var(--surface);
     }
     form.composer textarea {
-      flex: 1; min-height: 44px; max-height: 40vh; resize: vertical;
-      overflow-y: auto; field-sizing: content;
+      flex: 1; min-height: 46px; max-height: 40vh; resize: vertical;
+      overflow-y: auto; border-radius: var(--radius); padding: 12px 14px;
     }
-    form.composer button { width: auto; margin: 0; padding: 8px 16px; }
+    form.composer button {
+      width: auto; margin: 0; padding: 12px 26px; border-radius: var(--radius); font-size: 15px;
+    }
 
-    .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin: 8px 0; }
-    .tabs button { margin: 0; padding: 7px 8px; font-size: 12px; }
-    .tabs button.on { background: var(--accent); color: #062033; border: 0; }
-    .filters { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; margin: 8px 0; }
-    .filters label { margin: 0; text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
-    aside input[type=checkbox] { width: auto; margin: 0; }
-    .cat-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 48vh; overflow: auto; padding-right: 4px; }
-    .cat-list::-webkit-scrollbar { width: 8px; }
-    .cat-list::-webkit-scrollbar-thumb { background: #3a4654; border-radius: 8px; }
+    /* ---------- catalog --------------------------------------------------- */
+    .tabs {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin: 10px 0 2px;
+      background: var(--surface-2); padding: 4px; border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+    }
+    .tabs button {
+      margin: 0; padding: 7px 8px; font-size: 12px; background: transparent;
+      color: var(--muted); border: 0; box-shadow: none; font-weight: 650;
+    }
+    .tabs button:hover:not(.on) { color: var(--ink); background: transparent; }
+    .tabs button.on { background: var(--brand); color: #fff; box-shadow: var(--shadow-sm); }
+    .filters { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 9px 0; }
+    .filters label {
+      margin: 0; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600;
+      color: var(--muted); display: flex; gap: 6px; align-items: center; white-space: nowrap;
+    }
+    aside input[type=checkbox], .filt input[type=checkbox] { width: auto; margin: 0; accent-color: var(--violet); }
+    .cat-list {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
+      max-height: 46vh; overflow: auto; padding-right: 3px;
+    }
     .card {
-      border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel);
+      border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 11px 12px;
+      background: var(--surface); transition: border-color .12s ease, box-shadow .12s ease;
     }
-    .card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .card:hover { border-color: var(--line-2); box-shadow: var(--shadow-sm); }
+    .card.active {
+      border-color: var(--violet); background: var(--violet-soft);
+      box-shadow: 0 0 0 1px var(--violet);
+    }
     .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
-    .card-name { font-weight: 600; font-size: 13px; word-break: break-word; }
+    .card-name { font-weight: 700; font-size: 13px; word-break: break-word; letter-spacing: -.005em; }
+    .pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
     .badge {
-      flex: none; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
-      padding: 2px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+      flex: none; font-size: 10px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 999px; background: var(--surface-2);
+      border: 1px solid var(--line-2); color: var(--muted); white-space: nowrap;
     }
-    .badge.ready { color: var(--ok); border-color: #2e5a44; }
-    .badge.get { color: var(--accent); border-color: #2a4d6e; }
-    .badge.off { color: var(--warn); border-color: #5a4a2e; }
-    .meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .est { color: var(--muted); }
-    .card-actions { display: flex; gap: 6px; margin-top: 8px; }
-    .card-actions button { width: auto; flex: 1; margin: 0; padding: 7px 10px; font-size: 13px; }
-    .empty { font-size: 13px; color: var(--muted); padding: 12px 4px; }
+    .badge.ready { color: #04724d; background: var(--lime-soft); border-color: transparent; }
+    .badge.get { color: #0a5f80; background: var(--cyan-soft); border-color: transparent; }
+    .badge.off { color: #8a4b00; background: var(--amber-soft); border-color: transparent; }
+    .badge.fit-perfect, .badge.fit-good { color: #04724d; background: var(--lime-soft); border-color: transparent; }
+    .badge.fit-marginal, .badge.fit-tight { color: #8a4b00; background: var(--amber-soft); border-color: transparent; }
+    .badge.fit-wont { color: #a01221; background: var(--coral-soft); border-color: transparent; }
+    .badge.tools { color: #4b23c4; background: var(--violet-soft); border-color: transparent; }
+    @media (prefers-color-scheme: dark) {
+      .badge.ready, .badge.fit-perfect, .badge.fit-good { color: var(--lime); }
+      .badge.get { color: var(--cyan); }
+      .badge.off, .badge.fit-marginal, .badge.fit-tight { color: var(--amber); }
+      .badge.fit-wont { color: var(--coral); }
+      .badge.tools { color: var(--violet); }
+    }
+    .meta { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.45; }
+    .why { font-size: 11.5px; color: var(--amber); margin-top: 5px; }
+    .card-actions { display: flex; gap: 6px; margin-top: 9px; }
+    .card-actions button { width: auto; flex: 1; margin: 0; padding: 7px 10px; font-size: 12.5px; }
+    .empty {
+      font-size: 13px; color: var(--muted); padding: 18px 10px; text-align: center;
+      background: var(--surface-2); border: 1px dashed var(--line-2); border-radius: var(--radius-sm);
+    }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 0; }
+    .btn-row button { margin: 0; font-size: 12.5px; padding: 8px; }
+
+    /* ---------- progress -------------------------------------------------- */
+    .bar {
+      height: 7px; border-radius: 999px; background: var(--line);
+      overflow: hidden; margin-top: 7px; display: none;
+    }
+    .bar.on { display: block; }
+    .bar > i { display: block; height: 100%; width: 0%; background: var(--brand); transition: width .3s ease; }
+
+    /* ---------- permissions ----------------------------------------------- */
+    .perm { display: flex; align-items: center; gap: 8px; margin: 2px 0 4px; }
+    .perm select { flex: 1; margin: 0; }
+    .perm-state {
+      font-size: 10px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+      padding: 4px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent;
+    }
+    .perm-state.off { color: var(--muted); background: var(--surface-2); border-color: var(--line-2); }
+    .perm-state.ask { color: #8a4b00; background: var(--amber-soft); }
+    .perm-state.on { color: #a01221; background: var(--coral-soft); }
+    @media (prefers-color-scheme: dark) {
+      .perm-state.ask { color: var(--amber); }
+      .perm-state.on { color: var(--coral); }
+    }
+
+    /* ---------- modals ---------------------------------------------------- */
     .overlay {
-      display: none; position: fixed; inset: 0; background: rgba(4, 8, 12, .72);
-      z-index: 40; align-items: center; justify-content: center; padding: 24px;
+      display: none; position: fixed; inset: 0; background: rgba(22, 12, 52, .5);
+      backdrop-filter: blur(3px); z-index: 40; align-items: center; justify-content: center; padding: 24px;
     }
     .overlay.on { display: flex; }
     .modal {
-      width: min(860px, 100%); max-height: 86vh; display: flex; flex-direction: column;
-      background: #12181f; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+      width: min(880px, 100%); max-height: 86vh; display: flex; flex-direction: column;
+      background: var(--bg-2); border: 1px solid var(--line); border-radius: 18px;
+      overflow: hidden; box-shadow: var(--shadow-lg);
     }
-    .modal header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
-    .modal h2 { margin: 0; font-size: 16px; }
-    .modal .toolbar { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 8px; padding: 0 16px 8px; }
-    .modal .toolbar2 { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto auto; gap: 8px; padding: 0 16px 10px; align-items: end; }
+    .modal > header {
+      display: flex; justify-content: space-between; align-items: center; gap: 14px;
+      padding: 14px 18px; background: var(--brand); color: #fff;
+    }
+    .modal h2 { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; }
+    .close-x {
+      width: auto; flex: none; margin: 0; padding: 6px 14px; border-radius: 999px;
+      background: rgba(255, 255, 255, .18); color: #fff;
+      border: 1px solid rgba(255, 255, 255, .4); box-shadow: none;
+    }
+    .close-x:hover:not(:disabled) { background: rgba(255, 255, 255, .32); }
+    .modal .toolbar { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 9px; padding: 14px 18px 6px; }
+    .modal .toolbar2 {
+      display: grid; grid-template-columns: 1fr 1fr 1fr auto auto auto; gap: 9px;
+      padding: 0 18px 12px; align-items: end;
+    }
     .filt label { margin: 0 0 4px; font-size: 10px; }
     .filt input, .filt select, .filt button { margin: 0; }
-    .modal .toolbar button, .modal .toolbar2 button, .modal .toolbar input, .modal .toolbar2 input, .modal .toolbar2 select { margin: 0; }
-    .modal .list { overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
-    .modal .list::-webkit-scrollbar { width: 8px; }
-    .modal .list::-webkit-scrollbar-thumb { background: #3a4654; border-radius: 8px; }
-    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 0; }
-    .btn-row button { margin: 0; font-size: 12px; padding: 7px 8px; }
-    .perm { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; }
-    .perm select { flex: 1; margin: 0; }
-    .perm-state { font-size: 11px; padding: 2px 7px; border-radius: 10px; border: 1px solid #3a4654; }
-    .perm-state.off { color: #8fa0b3; }
-    .perm-state.ask { color: #e0b341; border-color: #6b5a20; }
-    .perm-state.on { color: #ff9f6b; border-color: #7a4126; }
-    .diff { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px;
-            white-space: pre; overflow: auto; max-height: 46vh; padding: 12px 16px; margin: 0;
-            line-height: 1.45; }
-    .diff .add { color: #7ee08a; }
-    .diff .del { color: #ff8b8b; }
-    .diff .hunk { color: #6fa8ff; }
-    .diff .meta { color: #8fa0b3; }
-    .confirm-bar { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px;
-                   border-top: 1px solid #26313d; }
-    .confirm-bar button { margin: 0; }
-    .files li .tag { font-size: 10px; color: #8fa0b3; border: 1px solid #33404e;
-                     border-radius: 8px; padding: 1px 5px; margin-left: 6px; }
+    .filt.check {
+      display: flex; flex-direction: row; align-items: center; gap: 6px;
+      text-transform: none; font-size: 12px; font-weight: 600; color: var(--muted);
+      padding-bottom: 9px; white-space: nowrap;
+    }
+    .modal .toolbar button, .modal .toolbar2 button,
+    .modal .toolbar input, .modal .toolbar2 input, .modal .toolbar2 select { margin: 0; }
+    .modal .list {
+      overflow: auto; padding: 4px 18px 14px; display: flex; flex-direction: column; gap: 9px;
+      flex: 1; min-height: 0;
+    }
+    .modal-foot {
+      flex: none; padding: 11px 18px; border-top: 1px solid var(--line);
+      background: var(--surface-2); display: flex; justify-content: center;
+    }
+    .modal-foot button { margin: 0; width: auto; min-width: 190px; }
+
+    .diff {
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px;
+      white-space: pre; overflow: auto; max-height: 46vh; padding: 14px 18px; margin: 0;
+      line-height: 1.5; background: var(--surface-2);
+    }
+    .diff .add { color: #04724d; background: rgba(0, 192, 122, .10); display: block; }
+    .diff .del { color: #a01221; background: rgba(255, 59, 82, .10); display: block; }
+    .diff .hunk { color: var(--violet); font-weight: 700; }
+    .diff .dmeta { color: var(--muted); }
+    @media (prefers-color-scheme: dark) {
+      .diff .add { color: var(--lime); }
+      .diff .del { color: var(--coral); }
+    }
+    .confirm-bar {
+      display: flex; gap: 9px; justify-content: flex-end; padding: 13px 18px;
+      border-top: 1px solid var(--line); background: var(--surface-2);
+    }
+    .confirm-bar button { margin: 0; width: auto; padding: 9px 20px; }
+
+    /* ---------- responsive ------------------------------------------------ */
+    @media (max-width: 980px) {
+      body { height: auto; overflow: auto; }
+      main { grid-template-columns: 1fr; overflow: visible; min-height: 0; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: none; overflow: visible; }
+      .chat { height: 72vh; }
+      .brand .sub { max-width: 40vw; }
+      .cat-list { max-height: none; }
+    }
+    @media (max-width: 720px) {
+      header.top { flex-wrap: wrap; gap: 10px; }
+      .meter { font-size: 11px; }
+      .modal .toolbar, .modal .toolbar2 { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>AgentForge</h1>
-      <div class="sub" id="ws"></div>
+  <header class="top">
+    <div class="brand">
+      <div class="spark" aria-hidden="true">&#9889;</div>
+      <div style="min-width:0">
+        <h1>AgentForge</h1>
+        <div class="sub" id="ws"></div>
+      </div>
     </div>
-    <div class="meter" id="meter">tokens 0 / 32000 · $0.00 / $0.50</div>
+    <div class="head-right">
+      <div class="meter" id="meter">turn 0 / 32000 tokens &middot; $0.0000 / $0.50</div>
+      <button class="head-btn" id="newChat" type="button">New chat</button>
+    </div>
   </header>
   <main>
     <aside>
-      <label>OpenRouter key (optional)</label>
-      <input id="key" type="password" placeholder="sk-or-… only if using cloud" />
-      <button id="saveKey">Save key</button>
-      <label>Fast probe (2-min path)</label>
-      <button class="ghost" id="probe">Run fast probe</button>
-      <div id="probeOut" class="sub"></div>
+      <section class="panel">
+        <h2><span class="dot"></span> OpenRouter (optional)</h2>
+        <label for="key">API key</label>
+        <input id="key" type="password" placeholder="sk-or-... only if using cloud" />
+        <button id="saveKey">Save key</button>
+        <label>Measure the pinned model</label>
+        <button class="ghost" id="probe">Run fast probe</button>
+        <div id="probeOut" class="status"></div>
+        <button class="ghost" id="probeClear" type="button" style="display:none">Clear verdict &amp; unblock chat</button>
+        <p class="note">The probe measures whichever model is pinned right now. It never changes your pin.</p>
+      </section>
 
-      <label>Local models</label>
-      <div id="currentModel" class="status">loading catalog…</div>
-      <div id="hw" class="hw"></div>
-      <div class="btn-row">
-        <button id="browseLlmfit">Browse llmfit models</button>
-        <button class="ghost" id="browseOllama">Browse Ollama models</button>
-      </div>
-      <div class="tabs" id="catTabs">
-        <button type="button" class="ghost on" data-tab="ready">Ready</button>
-        <button type="button" class="ghost" data-tab="download">Download</button>
-        <button type="button" class="ghost" data-tab="all">All</button>
-      </div>
-      <div class="filters">
-        <input id="catFilter" placeholder="filter name…" />
-        <label><input type="checkbox" id="toolsOnly" /> tools only</label>
-      </div>
-      <div id="scanOut" class="status"></div>
-      <div class="cat-list" id="catList"></div>
-      <p class="note">Local chat needs no OpenRouter key. Pick a Ready model, or use <strong>Browse Ollama</strong> / <strong>Browse llmfit</strong> to download one that fits this PC.</p>
+      <section class="panel">
+        <h2><span class="dot c"></span> Local models</h2>
+        <div id="currentModel" class="status">loading catalog...</div>
+        <div id="hw" class="hw"></div>
+        <div class="btn-row" style="margin-top:10px">
+          <button id="browseLlmfit">Browse llmfit models</button>
+          <button class="ghost" id="browseOllama">Browse Ollama models</button>
+        </div>
+        <div class="tabs" id="catTabs">
+          <button type="button" data-tab="ready" class="on">Ready</button>
+          <button type="button" data-tab="download">Download</button>
+          <button type="button" data-tab="all">All</button>
+        </div>
+        <div class="filters">
+          <input id="catFilter" placeholder="filter name..." />
+          <label><input type="checkbox" id="toolsOnly" /> tools only</label>
+        </div>
+        <div id="scanOut" class="status"></div>
+        <div class="bar" id="scanBar"><i></i></div>
+        <button class="ghost" id="cancelDl" type="button" style="display:none">Cancel download</button>
+        <div class="cat-list" id="catList"></div>
+        <p class="note">
+          Local chat needs no OpenRouter key. Pick a Ready model, or use
+          <strong>Browse Ollama</strong> / <strong>Browse llmfit</strong> to get one that fits this PC.
+          Speed and VRAM figures are estimates, not measurements.
+        </p>
+      </section>
 
-      <label>Allow file edits</label>
-      <div class="perm">
-        <select id="permSelect">
-          <option value="deny">Off - read only</option>
-          <option value="ask">Ask - show a diff first</option>
-          <option value="allow">Allow - write immediately</option>
-        </select>
-        <span class="perm-state off" id="permState">off</span>
-      </div>
-      <p class="note" id="permNote">Writes stay inside this folder, cover .md .txt .json .csv .yaml .yml only, and are backed up to .agentforge/backups before any replacement. PDF and DOCX are read-only.</p>
+      <section class="panel">
+        <h2><span class="dot a"></span> Allow file edits</h2>
+        <div class="perm">
+          <select id="permSelect">
+            <option value="deny">Off - read only</option>
+            <option value="ask">Ask - show a diff first</option>
+            <option value="allow">Allow - write immediately</option>
+          </select>
+          <span class="perm-state off" id="permState">off</span>
+        </div>
+        <p class="note" id="permNote">Writes stay inside this folder, cover .md .txt .json .csv .yaml .yml only, and are backed up to .agentforge/backups before any replacement. PDF and DOCX are read-only.</p>
+      </section>
 
-      <label>Workspace files</label>
-      <ul class="files" id="fileList"></ul>
-      <a class="btn" id="chatDl" href="/api/export/chat">Download chat (.md)</a>
-      <div id="ingestWarn" class="note"></div>
+      <section class="panel">
+        <h2><span class="dot g"></span> Workspace files</h2>
+        <div id="indexState" class="status"></div>
+        <button class="ghost" id="reindex" type="button">Re-index this folder</button>
+        <ul class="files" id="fileList"></ul>
+        <a class="btn" id="chatDl" href="/api/export/chat">Download chat (.md)</a>
+        <div id="ingestWarn" class="note"></div>
+      </section>
     </aside>
+
     <section class="chat">
-      <div class="log" id="log"></div>
+      <div class="log" id="log">
+        <div class="welcome" id="welcome">
+          <div class="big">Ask about this folder.</div>
+          <p>AgentForge reads the PDF, txt and md files in your workspace and answers with citations.</p>
+          <p>Pick a Ready model on the left, then type a question below.</p>
+        </div>
+      </div>
       <form class="composer" id="form">
-        <textarea id="msg" placeholder="Ask about files in this folder…"></textarea>
+        <textarea id="msg" placeholder="Ask about files in this folder..."></textarea>
         <button type="submit">Ask</button>
       </form>
     </section>
   </main>
+
   <div class="overlay" id="llmfitModal" role="dialog" aria-label="llmfit models">
     <div class="modal">
       <header>
         <h2>Browse llmfit models</h2>
-        <button class="ghost close-x" id="closeLlmfit" type="button">Close</button>
+        <button class="close-x" id="closeLlmfit" type="button">Close</button>
       </header>
       <div class="toolbar">
         <div class="filt">
           <label>Search</label>
-          <input id="modalFilter" placeholder="name or provider…" />
+          <input id="modalFilter" placeholder="name or provider..." />
         </div>
         <div class="filt">
           <label>Provider</label>
@@ -232,7 +552,7 @@
             <option value="good">good</option>
             <option value="marginal">marginal</option>
             <option value="tight">tight</option>
-            <option value="wont_fit">wont_fit</option>
+            <option value="wont_fit">won't fit</option>
           </select>
         </div>
         <div class="filt">
@@ -247,25 +567,25 @@
             <option value="provider">Provider</option>
           </select>
         </div>
-        <label class="filt" style="display:flex; flex-direction:row; align-items:center; gap:6px; text-transform:none;">
-          <input type="checkbox" id="modalTools" /> tools
-        </label>
+        <label class="filt check"><input type="checkbox" id="modalDownloadable" checked /> downloadable only</label>
+        <label class="filt check"><input type="checkbox" id="modalTools" /> tools</label>
         <button class="ghost" id="modalReload" type="button">Refresh</button>
       </div>
-      <div id="modalStatus" class="note" style="padding: 0 16px 8px; margin:0;"></div>
+      <div id="modalStatus" class="note" style="padding: 0 18px 8px; margin:0;"></div>
       <div class="list" id="modalList"></div>
-      <div style="padding: 0 16px 14px;">
-        <button class="ghost" id="modalMore" type="button" style="display:none; margin:0;">Load more</button>
+      <div class="modal-foot" id="modalFoot" style="display:none">
+        <button class="ghost" id="modalMore" type="button">Load more</button>
       </div>
     </div>
   </div>
+
   <div class="overlay" id="diffModal" role="dialog" aria-label="Confirm file change">
     <div class="modal">
       <header>
         <h2 id="diffTitle">Confirm change</h2>
-        <button class="ghost close-x" id="diffClose" type="button">Close</button>
+        <button class="close-x" id="diffClose" type="button">Close</button>
       </header>
-      <div id="diffMeta" class="note" style="padding: 0 16px 8px; margin:0;"></div>
+      <div id="diffMeta" class="note" style="padding: 12px 18px 8px; margin:0;"></div>
       <pre class="diff" id="diffBody"></pre>
       <div class="confirm-bar">
         <button class="ghost" id="diffReject" type="button">Discard</button>
@@ -278,12 +598,12 @@
     <div class="modal">
       <header>
         <h2>Browse Ollama models</h2>
-        <button class="ghost close-x" id="closeOllama" type="button">Close</button>
+        <button class="close-x" id="closeOllama" type="button">Close</button>
       </header>
       <div class="toolbar" style="grid-template-columns: 1fr auto;">
         <div class="filt">
           <label>Filter</label>
-          <input id="ollamaFilter" placeholder="model name…" />
+          <input id="ollamaFilter" placeholder="model name..." />
         </div>
         <button class="ghost" id="ollamaReload" type="button" style="align-self:end;">Refresh</button>
       </div>
@@ -292,22 +612,39 @@
           <label>Pull tag</label>
           <input id="ollamaPullTag" placeholder="e.g. tinyllama" />
         </div>
-        <button id="ollamaPullBtn" type="button" style="align-self:end; margin:0;">Pull & use</button>
+        <button id="ollamaPullBtn" type="button" style="align-self:end; margin:0;">Pull &amp; use</button>
       </div>
-      <div id="ollamaStatus" class="note" style="padding: 0 16px 8px; margin:0;"></div>
+      <div id="ollamaStatus" class="note" style="padding: 0 18px 8px; margin:0;"></div>
       <div class="list" id="ollamaList"></div>
     </div>
   </div>
+
   <script>
     const log = document.getElementById("log");
     const meter = document.getElementById("meter");
     let session = "default";
     let catalogRows = [];
     let lastPullJob = null;
+    let lastLlmfitJob = null;
     let catTab = "ready";
     let currentPin = "";
+    let sessionTokens = 0;
+
+    // Ollama resolves a bare name to `:latest`; comparing raw strings meant no
+    // card ever showed "Using" after an llmfit import.
+    function normTag(name) {
+      const n = (name || "").trim();
+      return !n || n.includes(":") ? n : n + ":latest";
+    }
+    const samePin = (a, b) => !!a && normTag(a) === normTag(b);
+
+    function hideWelcome() {
+      const w = document.getElementById("welcome");
+      if (w) w.remove();
+    }
 
     function add(role, text, extra) {
+      hideWelcome();
       const d = document.createElement("div");
       d.className = "bubble " + (role === "user" ? "user" : "bot");
       d.textContent = text;
@@ -334,26 +671,46 @@
     }
 
     function renderHw(sys) {
-      const ram = sys && (sys.available_ram_gb || sys.total_ram_gb);
       const bits = [];
       if (sys && sys.cpu_name) bits.push(sys.cpu_name);
-      if (ram) bits.push(Number(sys.available_ram_gb || ram).toFixed(1) + " GB free RAM");
-      if (sys && sys.total_ram_gb) bits.push("of " + Number(sys.total_ram_gb).toFixed(1) + " GB");
+      if (sys && sys.total_ram_gb) bits.push(Number(sys.total_ram_gb).toFixed(1) + " GB RAM");
+      if (sys && sys.available_ram_gb) {
+        bits.push(Number(sys.available_ram_gb).toFixed(1) + " GB free now");
+      }
       document.getElementById("hw").textContent = bits.join(" · ");
     }
 
     function badgeFor(state) {
       if (state === "INSTALLED") return { cls: "ready", text: "ready" };
       if (state === "PULLABLE") return { cls: "get", text: "download" };
+      if (state === "NO_RUNTIME") return { cls: "get", text: "download" };
       return { cls: "off", text: "can't run" };
+    }
+
+    // The raw enum leaked to the user as "fits wont_fit", and casing differed
+    // between llmfit and Ollama rows in the same list.
+    const FIT_TEXT = {
+      perfect: "perfect fit", good: "good fit", marginal: "marginal fit",
+      tight: "tight fit", wont_fit: "won't fit", unknown: "fit unknown",
+    };
+    function fitBadge(fits) {
+      const key = String(fits || "").toLowerCase();
+      if (!key) return null;
+      const cls = key === "wont_fit" ? "fit-wont" : "fit-" + key;
+      return { cls: cls, text: FIT_TEXT[key] || key.replace(/_/g, " ") };
+    }
+
+    function pill(cls, text) {
+      const b = document.createElement("span");
+      b.className = "badge " + cls;
+      b.textContent = text;
+      return b;
     }
 
     function metaLine(r) {
       const bits = [];
       if (r.params) bits.push(r.params);
       if (r.size != null) bits.push(r.size + " GB");
-      if (r.FITS) bits.push("fits " + r.FITS);
-      if (r.supports_tools) bits.push("tools");
       if (r.est_vram != null) bits.push("est. VRAM " + r.est_vram + " GB");
       if (r.est_tok_s != null) bits.push("est. " + r.est_tok_s + " tok/s");
       if (r.measured_tok_s != null) bits.push("measured " + r.measured_tok_s + " tok/s");
@@ -361,11 +718,22 @@
       return bits.join(" · ");
     }
 
+    function cardPills(r, stateBadge) {
+      const pills = document.createElement("div");
+      pills.className = "pills";
+      if (stateBadge) pills.appendChild(pill(stateBadge.cls, stateBadge.text));
+      const f = fitBadge(r.FITS);
+      if (f) pills.appendChild(pill(f.cls, f.text));
+      if (r.supports_tools) pills.appendChild(pill("tools", "tools"));
+      return pills;
+    }
+
     function renderCatalog() {
       const q = (document.getElementById("catFilter").value || "").toLowerCase();
       const toolsOnly = document.getElementById("toolsOnly").checked;
       const list = document.getElementById("catList");
       list.innerHTML = "";
+      const filtering = !!q || toolsOnly;
       const rows = catalogRows.filter((r) => {
         if (q && !(r.name || "").toLowerCase().includes(q) && !(r.ollama_name || "").toLowerCase().includes(q)) return false;
         if (toolsOnly && !r.supports_tools) return false;
@@ -376,11 +744,15 @@
       if (!rows.length) {
         const empty = document.createElement("div");
         empty.className = "empty";
-        empty.textContent = catTab === "ready"
-          ? "No installed local models. Open Download to pull one, or use OpenRouter above."
-          : catTab === "download"
-            ? "Nothing to download. This llmfit build has no Ollama tags — only Ready models can run."
-            : "No models match.";
+        // Keyed on whether a filter is active, not only on the tab: saying
+        // "no installed models" with seven installed was simply wrong.
+        empty.textContent = filtering
+          ? "No models match this filter. Clear the filter to see the rest."
+          : catTab === "ready"
+            ? "No installed local models. Open Download to pull one, or use OpenRouter above."
+            : catTab === "download"
+              ? "Nothing to download here. Use Browse Ollama or Browse llmfit to fetch a model."
+              : "No models found.";
         list.appendChild(empty);
         return;
       }
@@ -390,27 +762,23 @@
         const blocked = r.state === "NO_RUNTIME" || r.state === "UNRESOLVABLE";
         const card = document.createElement("div");
         const pinName = r.ollama_name || r.name;
-        card.className = "card" + (pinName === currentPin ? " active" : "");
-        const badge = badgeFor(r.state);
+        const isCurrent = samePin(pinName, currentPin);
+        card.className = "card" + (isCurrent ? " active" : "");
         const top = document.createElement("div");
         top.className = "card-top";
         const name = document.createElement("div");
         name.className = "card-name";
-        name.textContent = r.ollama_name || r.name;
-        const b = document.createElement("span");
-        b.className = "badge " + badge.cls;
-        b.textContent = badge.text;
+        name.textContent = pinName;
         top.appendChild(name);
-        top.appendChild(b);
+        card.appendChild(top);
+        card.appendChild(cardPills(r, badgeFor(r.state)));
         const meta = document.createElement("div");
         meta.className = "meta";
         meta.textContent = metaLine(r);
-        if (r.est_vram != null || r.est_tok_s != null) meta.classList.add("est");
-        card.appendChild(top);
-        card.appendChild(meta);
+        if (meta.textContent) card.appendChild(meta);
         if (r.reason && blocked) {
           const why = document.createElement("div");
-          why.className = "meta";
+          why.className = "why";
           why.textContent = r.reason;
           card.appendChild(why);
         }
@@ -418,8 +786,8 @@
         actions.className = "card-actions";
         if (canUse) {
           const use = document.createElement("button");
-          use.textContent = pinName === currentPin ? "Using" : "Use in this folder";
-          if (pinName === currentPin) use.disabled = true;
+          use.textContent = isCurrent ? "Using" : "Use in this folder";
+          if (isCurrent) use.disabled = true;
           use.onclick = (ev) => { ev.stopPropagation(); useLocal(r); };
           actions.appendChild(use);
         }
@@ -428,13 +796,6 @@
           pull.textContent = "Download & use";
           pull.onclick = (ev) => { ev.stopPropagation(); pullRow(r); };
           actions.appendChild(pull);
-          if (lastPullJob && lastPullJob.name === pinName) {
-            const cancel = document.createElement("button");
-            cancel.className = "ghost";
-            cancel.textContent = "Cancel";
-            cancel.onclick = (ev) => { ev.stopPropagation(); cancelPull(); };
-            actions.appendChild(cancel);
-          }
         }
         if (blocked) {
           const no = document.createElement("button");
@@ -445,7 +806,7 @@
         }
         card.appendChild(actions);
         card.onclick = () => {
-          if (canUse) useLocal(r);
+          if (canUse && !isCurrent) useLocal(r);
           else if (canPull) pullRow(r);
         };
         list.appendChild(card);
@@ -453,7 +814,7 @@
     }
 
     async function loadCatalog() {
-      document.getElementById("currentModel").textContent = "loading catalog…";
+      document.getElementById("currentModel").textContent = "loading catalog...";
       const s = await j("/api/catalog?limit=80");
       catalogRows = s.rows || [];
       const cur = s.current || {};
@@ -467,42 +828,82 @@
 
     async function useLocal(r) {
       const name = r.ollama_name || r.name;
-      document.getElementById("scanOut").textContent = "switching to " + name + "…";
+      setScan("switching to " + name + "...");
       try {
         await j("/api/model", {
           method: "POST",
           headers: {"Content-Type":"application/json"},
           body: JSON.stringify({ provider: "ollama", name, probe: false }),
         });
-        document.getElementById("scanOut").textContent = "Using " + name + " on this folder.";
+        setScan("Using " + name + " on this folder.");
         add("bot", "Local model " + name + " is active. Ask about files in this folder.");
         await loadCatalog();
       } catch (e) {
-        document.getElementById("scanOut").textContent = String(e);
+        setScan(String(e));
       }
     }
 
+    // ---- download progress ------------------------------------------------
+    function setScan(text, percent) {
+      document.getElementById("scanOut").textContent = text || "";
+      const bar = document.getElementById("scanBar");
+      if (percent == null) {
+        bar.classList.remove("on");
+        bar.firstElementChild.style.width = "0%";
+      } else {
+        bar.classList.add("on");
+        bar.firstElementChild.style.width = Math.max(0, Math.min(100, percent)) + "%";
+      }
+    }
+
+    // The CLI line already carries its own percentage; showing ours as well
+    // printed the same progress twice with two different numbers.
+    function progressLine(p) {
+      const raw = (p.status || "downloading").replace(/\s*\d+(\.\d+)?\s*%/g, "").trim();
+      const pct = p.percent != null ? Math.round(p.percent) : null;
+      return { text: pct != null ? raw + " " + pct + "%" : raw, pct: pct };
+    }
+
+    function showCancel(kind) {
+      const btn = document.getElementById("cancelDl");
+      btn.style.display = kind ? "block" : "none";
+      btn.dataset.kind = kind || "";
+    }
+
     async function pullRow(r) {
-      document.getElementById("scanOut").textContent = "downloading " + (r.ollama_name || r.name) + "…";
-      const started = await j("/api/catalog/pull", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({
-          name: r.ollama_name || r.name,
-          ollama_name: r.ollama_name,
-          gguf_sources: r.gguf_sources || [],
-        }),
-      });
-      lastPullJob = { id: started.job_id, name: r.ollama_name || r.name, row: r };
+      const tag = r.ollama_name || r.name;
+      setScan("downloading " + tag + "...", 0);
+      let started;
+      try {
+        started = await j("/api/catalog/pull", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            name: tag,
+            ollama_name: r.ollama_name,
+            gguf_sources: r.gguf_sources || [],
+          }),
+        });
+      } catch (e) {
+        setScan("Download failed: " + (e.message || String(e)));
+        return;
+      }
+      lastPullJob = { id: started.job_id, name: tag, row: r };
+      showCancel("ollama");
       renderCatalog();
       const tick = async () => {
         const p = await j("/api/catalog/pull/" + started.job_id);
-        document.getElementById("scanOut").textContent = (p.status || "downloading") + " " + (p.percent || 0) + "%";
+        const line = progressLine(p);
+        setScan(line.text, line.pct);
         if (p.done) {
           lastPullJob = null;
+          showCancel(null);
           renderCatalog();
-          if (p.status === "success") await useLocal(r);
-          else document.getElementById("scanOut").textContent = p.error || p.status;
+          if (p.status === "success") {
+            await useLocal(r);
+          } else {
+            setScan("Download failed: " + (p.error || p.status));
+          }
           return;
         }
         setTimeout(tick, 800);
@@ -511,11 +912,20 @@
     }
 
     async function cancelPull() {
-      if (!lastPullJob) return;
-      await j("/api/catalog/pull/" + lastPullJob.id + "/cancel", { method: "POST" });
-      document.getElementById("scanOut").textContent = "cancelling…";
+      const kind = document.getElementById("cancelDl").dataset.kind;
+      try {
+        if (kind === "ollama" && lastPullJob) {
+          await j("/api/catalog/pull/" + lastPullJob.id + "/cancel", { method: "POST" });
+        } else if (kind === "llmfit" && lastLlmfitJob) {
+          await j("/api/catalog/llmfit/download/" + lastLlmfitJob.id + "/cancel", { method: "POST" });
+        }
+        setScan("cancelling...");
+      } catch (e) {
+        setScan(String(e));
+      }
     }
 
+    // ---- llmfit modal -----------------------------------------------------
     let modalOffset = 0;
     let modalTotal = 0;
     let modalTimer = null;
@@ -553,6 +963,9 @@
       if (fit) p.set("fit", fit);
       p.set("sort", document.getElementById("modalSort").value || "score");
       if (document.getElementById("modalTools").checked) p.set("tools", "true");
+      // Default on: the catalog is ~11k rows and almost none of them are
+      // obtainable, so the unfiltered first page was a dead end.
+      if (document.getElementById("modalDownloadable").checked) p.set("downloadable", "true");
       p.set("offset", String(offset));
       p.set("limit", "80");
       return p.toString();
@@ -564,7 +977,9 @@
       if (!rows.length && !append) {
         const empty = document.createElement("div");
         empty.className = "empty";
-        empty.textContent = "No models match these filters.";
+        empty.textContent = document.getElementById("modalDownloadable").checked
+          ? "No downloadable models match these filters. Untick 'downloadable only' to see the rest of the catalog."
+          : "No models match these filters.";
         list.appendChild(empty);
         return;
       }
@@ -576,17 +991,14 @@
         const name = document.createElement("div");
         name.className = "card-name";
         name.textContent = r.name;
-        const badge = badgeFor(r.state);
-        const b = document.createElement("span");
-        b.className = "badge " + badge.cls;
-        b.textContent = r.sharded ? "sharded" : (r.FITS || badge.text);
         top.appendChild(name);
-        top.appendChild(b);
+        card.appendChild(top);
+        const stateBadge = r.sharded ? { cls: "off", text: "sharded" } : badgeFor(r.state);
+        card.appendChild(cardPills(r, stateBadge));
         const meta = document.createElement("div");
         meta.className = "meta";
         const extra = [r.provider, r.use_case].filter(Boolean).join(" · ");
         meta.textContent = (extra ? extra + " · " : "") + metaLine(r);
-        card.appendChild(top);
         card.appendChild(meta);
         const actions = document.createElement("div");
         actions.className = "card-actions";
@@ -595,8 +1007,7 @@
           use.textContent = "Use in this folder";
           use.onclick = () => { setModal(false); useLocal(r); };
           actions.appendChild(use);
-        }
-        if (r.sharded || r.state === "UNRESOLVABLE") {
+        } else if (r.sharded || r.state === "UNRESOLVABLE") {
           const no = document.createElement("button");
           no.className = "ghost";
           no.disabled = true;
@@ -628,7 +1039,7 @@
       if (modalBusy) return;
       modalBusy = true;
       const status = document.getElementById("modalStatus");
-      status.textContent = append ? "loading more…" : "loading llmfit catalog…";
+      status.textContent = append ? "loading more..." : "loading llmfit catalog...";
       try {
         const offset = append ? modalOffset : 0;
         const data = await j("/api/catalog/llmfit?" + modalParams(offset));
@@ -641,8 +1052,8 @@
         modalTotal = data.total || 0;
         modalOffset = (append ? modalOffset : 0) + rows.length;
         paintModalRows(rows, append);
-        const more = document.getElementById("modalMore");
-        more.style.display = modalOffset < modalTotal ? "block" : "none";
+        document.getElementById("modalFoot").style.display =
+          modalOffset < modalTotal ? "flex" : "none";
         status.textContent = "Showing " + modalOffset + " of " + modalTotal +
           (data.catalog_size ? " (catalog " + data.catalog_size + ")" : "") +
           (data.error ? " · " + data.error : "");
@@ -663,6 +1074,7 @@
       if (open) fetchModal(false);
     }
 
+    // ---- Ollama modal -----------------------------------------------------
     let ollamaRows = [];
 
     function paintOllamaRows(rows) {
@@ -686,28 +1098,26 @@
         const card = document.createElement("div");
         card.className = "card";
         const tag = r.ollama_name || r.name;
+        const isCurrent = samePin(tag, currentPin);
+        if (isCurrent) card.classList.add("active");
         const top = document.createElement("div");
         top.className = "card-top";
         const name = document.createElement("div");
         name.className = "card-name";
         name.textContent = tag;
-        const badge = badgeFor(r.state);
-        const b = document.createElement("span");
-        b.className = "badge " + badge.cls;
-        b.textContent = badge.text;
         top.appendChild(name);
-        top.appendChild(b);
+        card.appendChild(top);
+        card.appendChild(cardPills(r, badgeFor(r.state)));
         const meta = document.createElement("div");
         meta.className = "meta";
         meta.textContent = metaLine(r);
-        card.appendChild(top);
-        card.appendChild(meta);
+        if (meta.textContent) card.appendChild(meta);
         const actions = document.createElement("div");
         actions.className = "card-actions";
         if (r.state === "INSTALLED") {
           const use = document.createElement("button");
-          use.textContent = tag === currentPin ? "Using" : "Use in this folder";
-          if (tag === currentPin) use.disabled = true;
+          use.textContent = isCurrent ? "Using" : "Use in this folder";
+          if (isCurrent) use.disabled = true;
           use.onclick = () => { setOllamaModal(false); useLocal(r); };
           actions.appendChild(use);
         } else if (r.state === "PULLABLE" && r.ollama_name) {
@@ -723,7 +1133,7 @@
 
     async function fetchOllamaModal() {
       const status = document.getElementById("ollamaStatus");
-      status.textContent = "loading Ollama catalog…";
+      status.textContent = "loading Ollama catalog...";
       try {
         const data = await j("/api/catalog/ollama?limit=200");
         ollamaRows = data.rows || [];
@@ -749,10 +1159,9 @@
 
     async function downloadLlmfit(r) {
       const status = document.getElementById("modalStatus");
-      const scan = document.getElementById("scanOut");
-      const msg = "downloading " + r.name + " with llmfit…";
+      const msg = "downloading " + r.name + " with llmfit...";
       status.textContent = msg;
-      scan.textContent = msg;
+      setScan(msg, 0);
       try {
         const started = await j("/api/catalog/llmfit/download", {
           method: "POST",
@@ -763,12 +1172,16 @@
             gguf_sources: r.gguf_sources || [],
           }),
         });
+        lastLlmfitJob = { id: started.job_id, name: r.name };
+        showCancel("llmfit");
         const tick = async () => {
           const p = await j("/api/catalog/llmfit/download/" + started.job_id);
-          const line = (p.status || "downloading") + (p.percent ? " " + Math.round(p.percent) + "%" : "");
-          status.textContent = line;
-          scan.textContent = line;
+          const line = progressLine(p);
+          status.textContent = line.text;
+          setScan(line.text, line.pct);
           if (p.done) {
+            lastLlmfitJob = null;
+            showCancel(null);
             if (p.status === "success") {
               const tag = p.ollama_tag;
               status.textContent = "Imported as " + tag;
@@ -777,7 +1190,7 @@
             } else {
               const errMsg = "Download failed: " + (p.error || p.status);
               status.textContent = errMsg;
-              scan.textContent = errMsg;
+              setScan(errMsg);
             }
             return;
           }
@@ -787,23 +1200,35 @@
       } catch (e) {
         const errMsg = "Download error: " + (e.message || String(e));
         status.textContent = errMsg;
-        scan.textContent = errMsg;
+        setScan(errMsg);
+        showCancel(null);
       }
     }
 
+    // ---- workspace files --------------------------------------------------
     async function loadFiles() {
       const data = await j("/api/files");
       const ul = document.getElementById("fileList");
       ul.innerHTML = "";
-      (data.files || []).forEach((f) => {
+      const files = data.files || [];
+      let stale = 0;
+      files.forEach((f) => {
         const li = document.createElement("li");
         const name = document.createElement("span");
+        name.className = "fname";
         name.textContent = f.path;
         name.title = f.path + " · " + f.size + " bytes";
         if (f.writable) {
           const tag = document.createElement("span");
           tag.className = "tag";
           tag.textContent = "editable";
+          name.appendChild(tag);
+        }
+        if (f.indexed === false) {
+          stale += 1;
+          const tag = document.createElement("span");
+          tag.className = "tag stale";
+          tag.textContent = "not indexed";
           name.appendChild(tag);
         }
         const a = document.createElement("a");
@@ -815,8 +1240,33 @@
         li.appendChild(a);
         ul.appendChild(li);
       });
-      if (!(data.files || []).length) {
-        ul.innerHTML = "<li><span>No PDF / txt / md / docx files in this folder.</span></li>";
+      if (!files.length) {
+        ul.innerHTML = "<li><span class='fname'>No PDF / txt / md / docx files in this folder.</span></li>";
+      }
+      // A file the sidebar lists but the agent cannot search needs to say so.
+      document.getElementById("indexState").textContent = stale
+        ? stale + " file(s) are not indexed yet - the agent cannot search them."
+        : files.length ? "All listed files are indexed." : "";
+      document.getElementById("indexState").className = "status" + (stale ? " bad" : " ok");
+      return files;
+    }
+
+    async function reindex() {
+      const btn = document.getElementById("reindex");
+      btn.disabled = true;
+      const state = document.getElementById("indexState");
+      state.className = "status";
+      state.textContent = "re-indexing...";
+      try {
+        const out = await j("/api/ingest", { method: "POST" });
+        await loadFiles();
+        add("bot", "Re-indexed this folder: " + (out.files_scanned || 0) +
+          " file(s), " + (out.chunks || 0) + " chunk(s).");
+      } catch (e) {
+        state.className = "status bad";
+        state.textContent = String(e);
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -857,7 +1307,7 @@
       body.innerHTML = "";
       (text || "(new file - no previous content)").split("\n").forEach((line) => {
         const span = document.createElement("span");
-        if (line.startsWith("+++") || line.startsWith("---")) span.className = "meta";
+        if (line.startsWith("+++") || line.startsWith("---")) span.className = "dmeta";
         else if (line.startsWith("@@")) span.className = "hunk";
         else if (line.startsWith("+")) span.className = "add";
         else if (line.startsWith("-")) span.className = "del";
@@ -901,15 +1351,32 @@
       showNextConfirm();
     }
 
+    // ---- meter ------------------------------------------------------------
+    // The per-turn budget is what the loop actually enforces, so that is what
+    // the bar reports. The session total is shown beside it, not against it.
+    function paintMeter(u) {
+      const turn = u.turn_tokens || 0;
+      const cap = u.max_tokens || 32000;
+      sessionTokens = (u.prompt_tokens || 0) + (u.completion_tokens || 0);
+      const usd = (u.usd || 0).toFixed(4);
+      const maxUsd = Number(u.max_usd != null ? u.max_usd : 0.5).toFixed(2);
+      meter.textContent =
+        `turn ${turn} / ${cap} tokens · session ${sessionTokens} · $${usd} / $${maxUsd}`;
+    }
+
     async function boot() {
       const h = await j("/api/health");
-      document.getElementById("ws").textContent = h.workspace + (h.ingested ? " · indexed" : " · not ingested");
+      document.getElementById("ws").textContent =
+        h.workspace + (h.ingested ? " · indexed" : " · not ingested");
       const w = await j("/api/ingest/warnings");
       if (w.no_text_layer_count) {
         document.getElementById("ingestWarn").textContent =
-          w.no_text_layer_count + " files have no text layer and will miss lexical search.";
+          w.no_text_layer_count + " file(s) have no text layer and will miss lexical search.";
       }
       await loadFiles();
+      await j("/api/usage?session_id=" + encodeURIComponent(session))
+        .then((u) => paintMeter(Object.assign({ turn_tokens: 0 }, u)))
+        .catch(() => {});
       await loadPermissions().catch(() => paintPermission("deny"));
       document.getElementById("permSelect").onchange = (ev) => {
         setPermission(ev.target.value).catch((e) => add("bot", String(e)));
@@ -932,6 +1399,8 @@
         document.querySelectorAll("#catTabs button").forEach((b) => b.classList.toggle("on", b === btn));
         renderCatalog();
       };
+      document.getElementById("reindex").onclick = () => reindex();
+      document.getElementById("cancelDl").onclick = () => cancelPull();
       document.getElementById("browseLlmfit").onclick = () => setModal(true);
       document.getElementById("browseOllama").onclick = () => setOllamaModal(true);
       document.getElementById("closeLlmfit").onclick = () => setModal(false);
@@ -953,30 +1422,75 @@
         document.getElementById(id).onchange = () => fetchModal(false);
       });
       document.getElementById("modalTools").onchange = () => fetchModal(false);
+      document.getElementById("modalDownloadable").onchange = () => fetchModal(false);
       document.getElementById("modalMore").onclick = () => fetchModal(true);
       document.getElementById("modalReload").onclick = async () => {
-        document.getElementById("modalStatus").textContent = "refreshing…";
+        document.getElementById("modalStatus").textContent = "refreshing...";
         await j("/api/catalog/llmfit?refresh=true&limit=1").catch(() => ({}));
         fetchModal(false);
       };
+      document.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Escape") return;
+        setModal(false);
+        setOllamaModal(false);
+      });
     }
 
     document.getElementById("saveKey").onclick = async () => {
       await j("/api/key", { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ key: document.getElementById("key").value }) });
-      add("bot", "Key saved. Ask a question — or run the fast probe first.");
+      add("bot", "Key saved. Ask a question - or run the fast probe first.");
     };
 
     document.getElementById("probe").onclick = async () => {
-      document.getElementById("probeOut").textContent = "probing…";
+      const out = document.getElementById("probeOut");
+      const clear = document.getElementById("probeClear");
+      out.className = "status";
+      out.textContent = "probing the pinned model...";
+      clear.style.display = "none";
       try {
-        const c = await j("/api/probe", { method: "POST", headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ provider: "openrouter", name: "openai/gpt-4o-mini", mode: "fast" }) });
-        document.getElementById("probeOut").textContent =
-          c.verdict + " · lo95=" + (c.measured && c.measured.per_step_success_lo95) + " · steps=" + (c.measured && c.measured.max_steps);
+        // An empty body means "measure whatever is pinned". Naming a model
+        // here used to replace the user's pin with it.
+        const c = await j("/api/probe", { method: "POST",
+          headers: {"Content-Type":"application/json"}, body: JSON.stringify({}) });
+        const m = c.measured || {};
+        const who = c.probed ? c.probed.name : "the pinned model";
+        out.className = "status" + (c.verdict === "agent" ? " ok" : " bad");
+        out.textContent = who + ": " + c.verdict +
+          " · lo95=" + (m.per_step_success_lo95 == null ? "n/a" : m.per_step_success_lo95) +
+          " · steps=" + (m.max_steps == null ? "n/a" : m.max_steps);
+        if (c.verdict && c.verdict !== "agent") clear.style.display = "block";
       } catch (e) {
-        document.getElementById("probeOut").textContent = String(e);
+        out.className = "status bad";
+        out.textContent = String(e);
+        clear.style.display = "block";
       }
+    };
+
+    document.getElementById("probeClear").onclick = async () => {
+      const out = document.getElementById("probeOut");
+      try {
+        await j("/api/probe/clear", { method: "POST" });
+        out.className = "status ok";
+        out.textContent = "Verdict cleared. Chat is unblocked.";
+        document.getElementById("probeClear").style.display = "none";
+      } catch (e) {
+        out.className = "status bad";
+        out.textContent = String(e);
+      }
+    };
+
+    document.getElementById("newChat").onclick = async () => {
+      try {
+        await j("/api/session/reset", { method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ session_id: session }) });
+      } catch (e) { /* a fresh log is still worth showing */ }
+      log.innerHTML =
+        '<div class="welcome" id="welcome">' +
+        '<div class="big">New chat.</div>' +
+        '<p>Previous messages are cleared. Ask about files in this folder.</p></div>';
+      paintMeter({ turn_tokens: 0, prompt_tokens: 0, completion_tokens: 0, usd: 0 });
     };
 
     document.getElementById("chatDl").onclick = (ev) => {
@@ -993,12 +1507,11 @@
       box.style.height = "";
       add("user", text);
       const thinking = document.createElement("div");
-      thinking.className = "msg bot";
+      thinking.className = "bubble bot thinking";
       thinking.id = "thinkingMsg";
-      thinking.textContent = "Thinking with local model…";
+      thinking.textContent = "Thinking...";
       log.appendChild(thinking);
       log.scrollTop = log.scrollHeight;
-      document.getElementById("scanOut").textContent = "";
       const askBtn = document.querySelector("#form button[type=submit]");
       if (askBtn) askBtn.disabled = true;
       const ctrl = new AbortController();
@@ -1021,18 +1534,17 @@
           showNextConfirm();
         }
         if (r.eval && r.eval.enumeration) {
-          add("bot", "enumeration recall " + r.eval.enumeration.recall +
-            (r.eval.enumeration.cause ? " · FAIL " + r.eval.enumeration.cause : " · pass"));
+          const e = r.eval.enumeration;
+          add("bot", "enumeration recall " + e.recall +
+            (e.cause ? " · FAIL " + e.cause : " · pass"));
         }
-        const u = r.usage || {};
-        meter.textContent = `tokens ${u.prompt_tokens || 0} / ${u.max_tokens || 32000} · $${(u.usd || 0).toFixed(4)} / $${u.max_usd || 0.5}`;
+        paintMeter(r.usage || {});
       } catch (e) {
         thinking.remove();
         const msg = e && e.name === "AbortError"
           ? "Timed out after 4 minutes. Pick a smaller Ready model (Browse Ollama) and try again."
           : String(e);
         add("bot", msg);
-        document.getElementById("scanOut").textContent = msg;
       } finally {
         clearTimeout(timer);
         if (askBtn) askBtn.disabled = false;

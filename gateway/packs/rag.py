@@ -164,6 +164,10 @@ class HybridIndex:
     def ready(self) -> bool:
         return self.meta_path.exists() and self.meta_path.stat().st_size > 0
 
+    def indexed_paths(self) -> set[str]:
+        """Workspace-relative paths that are actually searchable right now."""
+        return {str(m.get("path") or "").replace("\\", "/") for m in self._meta} - {""}
+
     def _load(self) -> None:
         if self.vec_path.exists():
             self._vectors = np.load(self.vec_path)["v"]

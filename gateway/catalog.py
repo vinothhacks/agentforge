@@ -252,7 +252,10 @@ def merge_catalog(
     downloaded = downloaded or set()
     ram = parse_memory_gb(memory)
     if ram is None:
-        ram = float((system or {}).get("available_ram_gb") or (system or {}).get("total_ram_gb") or 0.0)
+        # Fit is a property of the machine, not of this instant. Keying it on
+        # free RAM made a 1.9 GB model read "wont_fit" on a 31.7 GB box and
+        # flip between page loads.
+        ram = float((system or {}).get("total_ram_gb") or (system or {}).get("available_ram_gb") or 0.0)
 
     installed_names = {str(m["name"]) for m in ollama_models}
     rows: list[dict[str, Any]] = []
@@ -372,6 +375,7 @@ def browse_llmfit(
     fit: str = "",
     sort: str = "score",
     tools: bool | None = None,
+    downloadable: bool | None = None,
     offset: int = 0,
     limit: int = 80,
     memory: str | None = None,
@@ -389,7 +393,7 @@ def browse_llmfit(
 
     ram = parse_memory_gb(memory)
     if ram is None:
-        ram = float(system.get("available_ram_gb") or system.get("total_ram_gb") or 0.0)
+        ram = float(system.get("total_ram_gb") or system.get("available_ram_gb") or 0.0)
     downloaded = already_downloaded_names()
     qn = (q or "").strip().lower()
     prov = (provider or "").strip().lower()
@@ -427,12 +431,14 @@ def browse_llmfit(
         cached = in_download_cache(name, ollama_name, downloaded)
         if sharded:
             state: State = "UNRESOLVABLE"
-        elif ollama_name or cached:
-            state = "INSTALLED" if cached else "PULLABLE"
-            if ollama_name:
-                state = "PULLABLE"
-            if cached:
-                state = "INSTALLED"
+        elif cached and (ollama_name or dl_ok):
+            # A cache hit alone is not enough to call a model installed: the
+            # name match is fuzzy, and a safetensors-only repo with no Ollama
+            # tag has nothing to run. Those rows rendered as READY with a
+            # disabled "No GGUF files in repo" as their only action.
+            state = "INSTALLED"
+        elif ollama_name:
+            state = "PULLABLE"
         elif not dl_ok:
             state = "UNRESOLVABLE"
         else:
@@ -483,6 +489,8 @@ def browse_llmfit(
             return False
         if tools is True and not r.get("supports_tools"):
             return False
+        if downloadable is True and r.get("state") == "UNRESOLVABLE":
+            return False
         return True
 
     filtered = [r for r in built if keep(r)]
@@ -502,7 +510,9 @@ def browse_llmfit(
         if key == "tps":
             return (-float(r.get("est_tok_s") or 0), r.get("name") or "")
         fits = FITS_RANK.get(str(r.get("FITS") or "").lower(), -1)
-        return (-fits, 0 if r.get("supports_tools") else 1, (r.get("name") or ""))
+        # A row the user can install beats a better-fitting one they cannot.
+        actionable = 0 if r.get("state") != "UNRESOLVABLE" else 1
+        return (actionable, -fits, 0 if r.get("supports_tools") else 1, (r.get("name") or ""))
 
     reverse_date = (sort or "").lower() == "date"
     filtered.sort(key=sk, reverse=reverse_date)
@@ -527,6 +537,7 @@ def browse_llmfit(
             "providers": sorted(providers, key=str.lower)[:400],
             "use_cases": sorted(use_cases, key=str.lower)[:200],
             "capabilities": sorted(caps, key=str.lower)[:200],
+            "downloadable": len([r for r in built if r.get("state") != "UNRESOLVABLE"]),
             "fits": ["perfect", "good", "marginal", "tight", "wont_fit", "unknown"],
             "sorts": ["score", "params", "mem", "ctx", "date", "provider", "tps"],
         },
