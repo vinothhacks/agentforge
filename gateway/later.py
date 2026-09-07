@@ -38,4 +38,11 @@ LATER_PACKS = {
 
 
 def later_status() -> dict:
-    return {"v1_tools": ["rag_search", "fs_list", "fs_read"], "later": LATER_PACKS}
+    from gateway.runtime.tools import ALL_TOOLS, READ_TOOLS, WRITE_TOOLS
+
+    return {
+        "v1_tools": list(ALL_TOOLS),
+        "v1_read_tools": list(READ_TOOLS),
+        "v1_write_tools": list(WRITE_TOOLS),
+        "later": LATER_PACKS,
+    }

@@ -35,7 +35,10 @@ class RagSpec(BaseModel):
 
 
 class Permissions(BaseModel):
-    fs_write: Literal["deny"] = "deny"
+    # deny  - write tools are not even advertised to the model
+    # ask   - the tool stages a diff and returns needs_confirm; the user approves
+    # allow - the write lands immediately (a backup is still taken first)
+    fs_write: Literal["deny", "ask", "allow"] = "deny"
     shell: Literal["deny"] = "deny"
     send_email: Literal["deny"] = "deny"
 
@@ -57,7 +60,16 @@ class AgentSpec(BaseModel):
     memory: MemorySpec = Field(default_factory=MemorySpec)
     workspace_root: str = "."
     rag: RagSpec = Field(default_factory=RagSpec)
-    tools: list[str] = Field(default_factory=lambda: ["rag_search", "fs_list", "fs_read"])
+    tools: list[str] = Field(
+        default_factory=lambda: [
+            "rag_search",
+            "fs_list",
+            "fs_read",
+            "fs_write",
+            "fs_edit",
+            "fs_mkdir",
+        ]
+    )
     permissions: Permissions = Field(default_factory=Permissions)
     budgets: Budgets = Field(default_factory=Budgets)
     planner: dict[str, Any] = Field(default_factory=lambda: {"enabled": False})

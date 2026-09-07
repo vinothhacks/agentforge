@@ -10,8 +10,9 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from pypdf import PdfReader
 
+from gateway.packs.extract import clean_pdf_text as _clean_pdf_text  # noqa: F401
+from gateway.packs.extract import extract_docx, extract_pdf, extract_text_file
 from gateway.paths import safe_join
 
 DIM = 384
@@ -108,44 +109,6 @@ def embed(text: str, dim: int = DIM) -> np.ndarray:
     return vec
 
 
-def _clean_pdf_text(raw: str, layout: bool) -> str:
-    text = raw.replace("\x00", "")
-    text = re.sub(r"-\n(?=[A-Za-z])", "", text)
-    if layout:
-        text = re.sub(r"[ \t]{2,}", " | ", text)
-    text = re.sub(r"[ \t]+\n", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
-
-
-def extract_pdf(path: Path) -> tuple[list[dict[str, Any]], bool]:
-    """Return page records and whether a text layer was found."""
-    reader = PdfReader(str(path))
-    pages = []
-    has_text = False
-    for i, page in enumerate(reader.pages, start=1):
-        raw = ""
-        try:
-            raw = page.extract_text(extraction_mode="layout") or ""
-            layout = True
-        except TypeError:
-            raw = page.extract_text() or ""
-            layout = False
-        if len((raw or "").strip()) < 20:
-            raw = page.extract_text() or ""
-            layout = False
-        text = _clean_pdf_text(raw or "", layout=layout)
-        if len(text) > 20:
-            has_text = True
-        pages.append({"page": i, "text": text})
-    return pages, has_text
-
-
-def extract_text_file(path: Path) -> list[dict[str, Any]]:
-    text = path.read_text(encoding="utf-8", errors="replace")
-    return [{"page": 1, "text": text}]
-
-
 def chunk_pages(pages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Pack whole lines so table rows and amount labels stay together."""
     chunks = []
@@ -201,6 +164,10 @@ class HybridIndex:
     def ready(self) -> bool:
         return self.meta_path.exists() and self.meta_path.stat().st_size > 0
 
+    def indexed_paths(self) -> set[str]:
+        """Workspace-relative paths that are actually searchable right now."""
+        return {str(m.get("path") or "").replace("\\", "/") for m in self._meta} - {""}
+
     def _load(self) -> None:
         if self.vec_path.exists():
             self._vectors = np.load(self.vec_path)["v"]
@@ -209,9 +176,12 @@ class HybridIndex:
 
     def ingest(self) -> dict[str, Any]:
         files: list[Path] = []
-        for ext in ("*.pdf", "*.txt", "*.md"):
+        for ext in ("*.pdf", "*.txt", "*.md", "*.docx"):
             files.extend(self.workspace.rglob(ext))
-        files = [f for f in files if ".agentforge" not in f.parts and ".git" not in f.parts]
+        skip_parts = {".agentforge", ".git", ".venv", "node_modules", "__pycache__"}
+        files = [f for f in files if not skip_parts.intersection(f.parts)]
+        # Word writes ~$lock.docx siblings; they are not documents.
+        files = [f for f in files if not f.name.startswith("~$")]
         skip_names = {"GROUND_TRUTH.md", "QUALITY.json", "LIVE_CHAT.json", "SOURCES.txt"}
         files = [f for f in files if f.name not in skip_names and f.suffix.lower() != ".json"]
         self.conn.execute("DROP TABLE IF EXISTS docs")
@@ -230,12 +200,21 @@ class HybridIndex:
         for f in files:
             rel = str(f.relative_to(self.workspace)).replace("\\", "/")
             scanned += 1
-            if f.suffix.lower() == ".pdf":
-                pages, has_text = extract_pdf(f)
-                if not has_text:
-                    no_text.append(rel)
-            else:
-                pages = extract_text_file(f)
+            suffix = f.suffix.lower()
+            try:
+                if suffix == ".pdf":
+                    pages, has_text = extract_pdf(f)
+                    if not has_text:
+                        no_text.append(rel)
+                elif suffix == ".docx":
+                    pages, has_text = extract_docx(f)
+                    if not has_text:
+                        no_text.append(rel)
+                else:
+                    pages = extract_text_file(f)
+            except Exception:  # noqa: BLE001 - one broken file must not abort ingest
+                no_text.append(rel)
+                continue
             chunks = chunk_pages(pages)
             for ch in chunks:
                 self.conn.execute(

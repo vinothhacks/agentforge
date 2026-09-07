@@ -9,7 +9,12 @@ from gateway.spec import AgentSpec
 
 def test_later_not_in_v1_tools():
     s = later_status()
-    assert s["v1_tools"] == ["rag_search", "fs_list", "fs_read"]
+    assert s["v1_read_tools"] == ["rag_search", "fs_list", "fs_read"]
+    assert s["v1_write_tools"] == ["fs_write", "fs_edit", "fs_mkdir"]
+    assert s["v1_tools"] == s["v1_read_tools"] + s["v1_write_tools"]
+    # Post-v1 surfaces must not have leaked into the tool roster.
+    assert "excel_write" not in s["v1_tools"]
+    assert "web_search" not in s["v1_tools"]
     assert "excel_write" in s["later"]
     assert s["later"]["mcp"]["v1"] == "denied"
 

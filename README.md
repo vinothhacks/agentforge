@@ -1,8 +1,42 @@
 # AgentForge
 
+![AgentForge: turn any LLM into an agent over your documents](docs/media/github-card.png)
+
 OpenRouter-first tool-using agent. v1 tools: `rag_search` (hybrid FTS5 + vectors), `fs_list`, `fs_read`. Indexes PDF / txt / md (not `.docx`).
 
 The UI lists **llmfit** and **Ollama** on the left, with install / download links. Workspace files and the chat can be downloaded from the same sidebar.
+
+## Demo
+
+A narrated three-minute walkthrough: the commit history, every sidebar panel, a cited answer, the write-permission diff gate, and the code behind them.
+
+[![AgentForge demo video](docs/media/demo-poster.png)](docs/media/agentforge-demo.mp4)
+
+Click the poster to open [`docs/media/agentforge-demo.mp4`](docs/media/agentforge-demo.mp4) (1080p, 2:58, 34 MB). GitHub plays it in the file viewer.
+
+What the video shows, in order:
+
+1. Repo, commit history, and the two QA reports (13 defects found, 172 tests green).
+2. `agentforge --dir <folder>`: first launch extracts text and builds the hybrid index.
+3. OpenRouter key + **Run fast probe**: measures the pinned model, never replaces it.
+4. Local models: Ollama tags plus the llmfit browser filtered to what fits this PC.
+5. A cited answer over the folder, with the tool trace under the reply.
+6. **Ask** permission: a unified diff before any write lands on disk.
+7. `dedupe_results`, the six write gates in `files_write.py`, and `blocked_component` in `paths.py`.
+
+### Tech stack
+
+- **API and UI:** FastAPI + Uvicorn serving one hand-written vanilla JavaScript page. CORS names the bound origin.
+- **Agent loop:** LangGraph + langchain-core. infer → validate (JSON Schema) → execute tools → budgets.
+- **Providers:** LiteLLM. OpenRouter first, Ollama runtime for local models, llama.cpp behind a flag.
+- **Retrieval:** SQLite FTS5 + LanceDB hybrid index, one `rag_search` tool with citations.
+- **Documents:** pypdf for PDF, plus txt and md.
+- **Local fit:** llmfit ranks ~11k models against this machine's RAM/VRAM and downloads GGUFs; Ollama runs them.
+- **Safety:** five-step capability probe with a Wilson lower bound; six gates and a backup before any write.
+- **Data:** SQLite (sessions, traces, probe cards, settings) and Pydantic v2 models.
+- **Tooling:** uv, pytest (172 tests), Playwright, GitHub Actions.
+
+The demo assets were produced with Playwright (screenshots and the rendered banner), OpenRouter text-to-speech (`deepgram/flux-tts`), and ffmpeg; the intro clip is `minimax/hailuo-3-max` via OpenRouter.
 
 ## Run from Downloads (or any folder)
 
